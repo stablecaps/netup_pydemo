@@ -97,26 +97,26 @@ if __name__ == "__main__":
     ### Check Domain Names
     test_domains = list(check_url_dict.keys())
 
-    # domain_results = curl_websites(url_dict=test_domains, timeout=2)
+    domain_results = curl_websites(url_dict=test_domains, timeout=2)
 
-    # print_results_from_dict(
-    #     results_dict=domain_results, header="Curl website domain name results"
-    # )
+    print_results_from_dict(
+        results_dict=domain_results, header="Curl website domain name results"
+    )
 
     # ### Check IP addresses
-    # failed_domain_ip_dict = {
-    #     check_url_dict[domain]: domain
-    #     for domain, result in domain_results.items()
-    #     if "OK - " not in result
-    # }
+    failed_domain_ip_dict = {
+        check_url_dict[domain]: domain
+        for domain, result in domain_results.items()
+        if "OK - " not in result
+    }
 
-    # print("failed_domain_ip_dict", failed_domain_ip_dict)
+    #'print("failed_domain_ip_dict", failed_domain_ip_dict)
 
-    # ip_results = curl_websites(url_dict=failed_domain_ip_dict, timeout=2)
+    ip_results = curl_websites(url_dict=failed_domain_ip_dict, timeout=2)
 
-    # print_results_from_dict(
-    #     results_dict=ip_results, header="Curl website IP address results"
-    # )
+    print_results_from_dict(
+        results_dict=ip_results, header="Curl website IP address results"
+    )
 
     ##################
     ### Find network setup details
@@ -130,6 +130,7 @@ if __name__ == "__main__":
     # 3. test route to gateway
     # 4. check if dns servers are working
 
+    ################################################################################
     conx_data_dict = {}
     public_ip = whatis_publicip(ip_check_url="https://ipinfo.io/ip", timeout=2)
 
@@ -144,7 +145,9 @@ if __name__ == "__main__":
 
     default_iface = iface_dict.get("default", None)
 
-    print(f"\ndefault_iface {default_iface} on {iface_dict['default']}")
+    # TODO: sort out default iface logic/assumptions
+    # TODO: use `nmcli general status`
+    # print(f"\ndefault_iface {default_iface} on {iface_dict['default']}")
 
     ###
     nmcli_all_dict = get_nmcli_info()
@@ -159,6 +162,14 @@ if __name__ == "__main__":
         nmcli_all_dict=nmcli_all_dict, iface_name=default_iface
     )
 
+    ################################################################################
+    ### Check Connection status
+
+    connx_status = active_nmcli_dict.get("GENERAL.STATE", None)
+    print("connx_status", connx_status)
+    #'sys.exit(0)
+
+    ### Check DNS servers
     dns_servers = [
         value for key, value in active_nmcli_dict.items() if "IP4.DNS" in key
     ]

@@ -121,3 +121,7 @@ def check_dns_servers(dns_servers, site_list):
 
             dns_results_dict[mydns].append([site, ipaddr])
     return dns_results_dict
+
+
+# https://www.certdepot.net/rhel7-get-started-nmcli/
+#' https://www.thegeekdiary.com/how-to-configure-and-manage-network-connections-using-nmcli/

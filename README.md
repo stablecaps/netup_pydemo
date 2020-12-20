@@ -15,3 +15,10 @@ nmcli
 ```
 
 ## Usage
+
+
+#### simulate dns fail
+https://serverfault.com/questions/776049/how-to-simulate-dns-server-response-timeout
+What you need is a "black hole server". You can use blackhole.webpagetest.org (72.66.115.13) which will silently drop all requests.
+
+Why I suggest this over the other answers, is because the aforementioned server has been established for this sole purpose.
