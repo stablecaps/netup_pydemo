@@ -71,30 +71,56 @@ def print_results_from_dict(results_dict, header):
             print(f"{term.red}{term.bold}{key}: {value}{term.normal}")
 
 
+def whatis_publicip(ip_check_url="https://ipinfo.io/ip", timeout=10):
+
+    try:
+        resp = requests.get(ip_check_url, timeout=timeout)
+    except Exception as err:
+        return err
+
+    return resp.text
+
+
 if __name__ == "__main__":
 
-    ### Check Domain Names
-    test_domains = list(check_url_dict.keys())
+    # ### Check Domain Names
+    # test_domains = list(check_url_dict.keys())
 
-    domain_results = curl_websites(url_dict=test_domains, timeout=2)
+    # domain_results = curl_websites(url_dict=test_domains, timeout=2)
 
-    print_results_from_dict(
-        results_dict=domain_results, header="Curl website domain name results"
-    )
+    # print_results_from_dict(
+    #     results_dict=domain_results, header="Curl website domain name results"
+    # )
 
-    ### Check IP addresses
-    failed_domain_ip_dict = {
-        check_url_dict[domain]: domain
-        for domain, result in domain_results.items()
-        if "OK - " not in result
-    }
+    # ### Check IP addresses
+    # failed_domain_ip_dict = {
+    #     check_url_dict[domain]: domain
+    #     for domain, result in domain_results.items()
+    #     if "OK - " not in result
+    # }
 
-    print("failed_domain_ip_dict", failed_domain_ip_dict)
+    # print("failed_domain_ip_dict", failed_domain_ip_dict)
 
-    ip_results = curl_websites(url_dict=failed_domain_ip_dict, timeout=2)
+    # ip_results = curl_websites(url_dict=failed_domain_ip_dict, timeout=2)
 
-    print_results_from_dict(
-        results_dict=ip_results, header="Curl website IP address results"
-    )
+    # print_results_from_dict(
+    #     results_dict=ip_results, header="Curl website IP address results"
+    # )
 
-#' curl https://ipinfo.io/ip
+    ##################
+    ### Find network setup details
+    # 1. find my public ip address
+    #   * curl https://ipinfo.io/ip
+    # 2. find local connection details
+    #   * interface-name
+    #   * dhcp details (if relevant)
+    #   * gateway ip
+    #   * nameservers
+    # 3. test route to gateway
+    # 4. check if dns servers are working
+
+    conx_data_dict = {}
+    public_ip = whatis_publicip(ip_check_url="https://ipinfo.io/ip", timeout=2)
+
+    # print("public_ip", public_ip)
+    conx_data_dict["public_ip"] = public_ip
