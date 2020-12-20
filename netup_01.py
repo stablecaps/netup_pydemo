@@ -4,6 +4,14 @@ import requests
 from requests.exceptions import HTTPError
 from blessings import Terminal
 
+from helpers import (
+    run_cmd_with_output,
+    preprocess_subp_output,
+    get_iface_info,
+    get_nmcli_info,
+    nmcli_printer,
+)
+
 # Strategy:
 # Start with higher level requests, then move towards more granular tests
 # 1. try to service a simple web request using curl & FQDN
@@ -124,3 +132,26 @@ if __name__ == "__main__":
 
     # print("public_ip", public_ip)
     conx_data_dict["public_ip"] = public_ip
+
+    ###
+    iface_dict = get_iface_info()
+
+    for key, value in iface_dict.items():
+        print(key, value)
+
+    default_iface = iface_dict.get("default", None)
+
+    print(f"\ndefault_iface {default_iface} on {iface_dict['default']}")
+
+    ###
+    nmcli_dict = get_nmcli_info()
+
+    # for key, value in nmcli_dict.items():
+    #     print(key, value)
+
+    nmcli_printer(
+        nmcli_dict=nmcli_dict,
+        default_iface=default_iface,
+        print_all_ifaces=False,
+    )
+    #'preprocess_subp_output(cmd_output=nmcli_cmd, delimiter="\t")
