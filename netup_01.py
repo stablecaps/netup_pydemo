@@ -10,6 +10,9 @@ from helpers import (
     get_iface_info,
     get_nmcli_info,
     nmcli_printer,
+    gen_nmcli_dict,
+    print_dict_with_list_of_lists,
+    check_dns_servers,
 )
 
 # Strategy:
@@ -91,8 +94,8 @@ def whatis_publicip(ip_check_url="https://ipinfo.io/ip", timeout=10):
 
 if __name__ == "__main__":
 
-    # ### Check Domain Names
-    # test_domains = list(check_url_dict.keys())
+    ### Check Domain Names
+    test_domains = list(check_url_dict.keys())
 
     # domain_results = curl_websites(url_dict=test_domains, timeout=2)
 
@@ -144,14 +147,30 @@ if __name__ == "__main__":
     print(f"\ndefault_iface {default_iface} on {iface_dict['default']}")
 
     ###
-    nmcli_dict = get_nmcli_info()
-
-    # for key, value in nmcli_dict.items():
-    #     print(key, value)
+    nmcli_all_dict = get_nmcli_info()
 
     nmcli_printer(
-        nmcli_dict=nmcli_dict,
+        nmcli_all_dict=nmcli_all_dict,
         default_iface=default_iface,
         print_all_ifaces=False,
     )
-    #'preprocess_subp_output(cmd_output=nmcli_cmd, delimiter="\t")
+
+    active_nmcli_dict = gen_nmcli_dict(
+        nmcli_all_dict=nmcli_all_dict, iface_name=default_iface
+    )
+
+    dns_servers = [
+        value for key, value in active_nmcli_dict.items() if "IP4.DNS" in key
+    ]
+
+    print("\nChecking DNS servers")
+    # https://stackoverflow.com/questions/13842116/how-do-we-get-txt-cname-and-soa-records-from-dnspython
+    # import dnspython as dns
+
+    dns_results_dict = check_dns_servers(
+        dns_servers=dns_servers, site_list=test_domains
+    )
+
+    for key, values in dns_results_dict.items():
+        print("\nNameServer:", key)
+        print_dict_with_list_of_lists(list_of_lists=values)
