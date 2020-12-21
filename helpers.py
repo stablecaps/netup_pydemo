@@ -73,7 +73,12 @@ def preprocess_subp_output(cmd_output, delimiter="\t", exclude_list=["", " "]):
 
 
 def get_iface_info():
-    route_cmd = run_cmd_with_output("route")
+    # The default gateway is always shown with the destination 0.0.0.0 when the -n option is used.
+    # https://unix.stackexchange.com/questions/94018/what-is-the-meaning-of-0-0-0-0-as-a-gateway
+    # https://opensource.com/business/16/8/introduction-linux-network-routing
+    # https://www.techrepublic.com/article/understand-the-basics-of-linux-routing/
+
+    route_cmd = run_cmd_with_output("route -n")
     iface_info = preprocess_subp_output(cmd_output=route_cmd, delimiter=" ")
 
     interface_dict = {}
@@ -109,15 +114,30 @@ def get_nmcli_info():
     return nmcli_dict
 
 
-def gen_nmcli_dict(nmcli_all_dict, iface_name):
+# def gen_nmcli_dict(nmcli_all_dict, iface_name):
 
-    lu_dict = {}
-    for val_subli in nmcli_all_dict[iface_name]:
+#     lu_dict = {}
+#     for val_subli in nmcli_all_dict[iface_name]:
+#         key = val_subli[0]
+#         value = val_subli[1]
+#         lu_dict[key] = value
+
+#     return lu_dict
+
+
+def gen_dict_from_list_of_2nlists(list_of_2nlists):
+    """
+    Takes in a list_of_2nlists such as [[key1, val1], [key2, val2], [key3, val3]]
+    and returns a dictionary.
+    """
+
+    mydict = {}
+    for val_subli in list_of_2nlists:
         key = val_subli[0]
         value = val_subli[1]
-        lu_dict[key] = value
+        mydict[key] = value
 
-    return lu_dict
+    return mydict
 
 
 def check_dns_servers(dns_servers, site_list):
@@ -130,7 +150,6 @@ def check_dns_servers(dns_servers, site_list):
         myresolver.nameservers = [mydns]
 
         for site in site_list:
-
             try:
                 result = myresolver.resolve(site)
                 for ipval in result:

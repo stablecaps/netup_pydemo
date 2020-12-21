@@ -1,7 +1,5 @@
 import os
 import sys
-import requests
-from requests.exceptions import HTTPError
 from helpers import *
 
 from printers import *
@@ -29,6 +27,10 @@ check_url_dict = {
 
 
 if __name__ == "__main__":
+
+    # TODO: cli-options
+    # print_all_ifaces - nmcli_printer()
+    #
 
     ### Check Domain Names
     test_domains = list(check_url_dict.keys())
@@ -72,32 +74,33 @@ if __name__ == "__main__":
     # 4. check if dns servers are working
 
     ################################################################################
-    conx_data_dict = {}
-    public_ip = whatis_publicip(ip_check_url="https://ipinfo.io/ip", timeout=2)
 
-    # print("public_ip", public_ip)
-    conx_data_dict["public_ip"] = public_ip
-
-    ###
     iface_dict = get_iface_info()
-
-    # print("\nKernel IP routing table")
-    # print("\nDestination\tIface")
-    # for destination, iface in iface_dict.items():
-    #     print(f"{destination}\t{iface}")
 
     print_results_from_dict(
         results_dict=iface_dict,
         header="Kernel IP routing table",
         fmt_func_str="fmt_bold_col1",
     )
-    sys.exit(0)
 
-    default_iface = iface_dict.get("default", None)
+    default_iface = iface_dict.get("0.0.0.0", None)
 
-    # TODO: sort out default iface logic/assumptions
-    # TODO: use `nmcli general status`
-    # print(f"\ndefault_iface {default_iface} on {iface_dict['default']}")
+    if default_iface is None:
+        fmt_error_bold_red(
+            mystr=(
+                "\n\nNo default gateway detected."
+                + "\nPlease check the connection to your router."
+                + "\nExiting.."
+            )
+        )
+        sys.exit(1)
+
+    ################
+    conx_data_dict = {}
+    public_ip = whatis_publicip(ip_check_url="https://ipinfo.io/ip", timeout=2)
+
+    # print("public_ip", public_ip)
+    conx_data_dict["public_ip"] = public_ip
 
     ###
     nmcli_all_dict = get_nmcli_info()
@@ -108,15 +111,19 @@ if __name__ == "__main__":
         print_all_ifaces=False,
     )
 
-    active_nmcli_dict = gen_nmcli_dict(
-        nmcli_all_dict=nmcli_all_dict, iface_name=default_iface
+    # active_nmcli_dict = gen_nmcli_dict(
+    #     nmcli_all_dict=nmcli_all_dict, iface_name=default_iface
+    # )
+
+    active_nmcli_dict = gen_dict_from_list_of_2nlists(
+        list_of_2nlists=nmcli_all_dict[default_iface]
     )
 
     ################################################################################
     ### Check Connection status
 
-    connx_status = active_nmcli_dict.get("GENERAL.STATE", None)
-    print("connx_status", connx_status)
+    # connx_status = active_nmcli_dict.get("GENERAL.STATE", None)
+    # print("connx_status", connx_status)
     #'sys.exit(0)
 
     ### Check DNS servers
