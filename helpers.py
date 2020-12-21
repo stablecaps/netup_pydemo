@@ -1,7 +1,49 @@
 import os
 import shlex
 import subprocess
+import requests
+from requests.exceptions import HTTPError
 import dns.resolver
+
+
+def curl_websites(url_dict, timeout=10):
+    """
+    Use requests to get http response codes or appopriate error from a list of websites.
+    https://realpython.com/python-requests/
+    """
+
+    results_dict = {}
+    for myurl in url_dict:
+        try:
+            resp = requests.get(f"https://{myurl}", timeout=timeout)
+            status_code = resp.status_code
+            # print("resp", resp.status_code)
+            result = f"OK - {str(status_code)}"
+        except HTTPError as err:
+            print(f"HTTP error occurred: {err}")
+            result = f"OK - {str(err)}"
+        except requests.ConnectTimeout as err:
+            # print(f"{myurl} timed out with {err}")
+            result = f"Timeout - {str(err)}"
+        except requests.ConnectionError as err:
+            # print(f"{myurl} had the following connection error {err}")
+            result = f"Connection Error - {str(err)}"
+        except Exception as err:
+            print(f"Other error occurred - {err}")
+
+        results_dict[myurl] = result
+
+    return results_dict
+
+
+def whatis_publicip(ip_check_url="https://ipinfo.io/ip", timeout=10):
+
+    try:
+        resp = requests.get(ip_check_url, timeout=timeout)
+    except Exception as err:
+        return err
+
+    return resp.text
 
 
 def run_cmd_with_output(comm_str):
@@ -67,26 +109,6 @@ def get_nmcli_info():
     return nmcli_dict
 
 
-def print_dict_with_list_of_lists(list_of_lists):
-    for values in list_of_lists:
-        fmt_kv_pair = ": ".join(values)
-        print(fmt_kv_pair)
-
-
-def nmcli_printer(nmcli_all_dict, default_iface, print_all_ifaces=False):
-
-    iface_li = [default_iface]
-    if print_all_ifaces:
-        iface_li = list(nmcli_dict.keys())
-
-    for iface in iface_li:
-        print(f"\ninfo for: {iface}")
-        # TODO: use print_dict_with_list_of_lists()
-        for val_subli in nmcli_all_dict[iface]:
-            fmt_kv_pair = ": ".join(val_subli)
-            print(fmt_kv_pair)
-
-
 def gen_nmcli_dict(nmcli_all_dict, iface_name):
 
     lu_dict = {}
@@ -124,4 +146,4 @@ def check_dns_servers(dns_servers, site_list):
 
 
 # https://www.certdepot.net/rhel7-get-started-nmcli/
-#' https://www.thegeekdiary.com/how-to-configure-and-manage-network-connections-using-nmcli/
+# https://www.thegeekdiary.com/how-to-configure-and-manage-network-connections-using-nmcli/

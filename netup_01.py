@@ -2,18 +2,9 @@ import os
 import sys
 import requests
 from requests.exceptions import HTTPError
-from blessings import Terminal
+from helpers import *
 
-from helpers import (
-    run_cmd_with_output,
-    preprocess_subp_output,
-    get_iface_info,
-    get_nmcli_info,
-    nmcli_printer,
-    gen_nmcli_dict,
-    print_dict_with_list_of_lists,
-    check_dns_servers,
-)
+from printers import *
 
 # Strategy:
 # Start with higher level requests, then move towards more granular tests
@@ -37,61 +28,6 @@ check_url_dict = {
 }
 
 
-def curl_websites(url_dict, timeout=10):
-    """
-    Use requests to get http response codes or appopriate error from a list of websites.
-    https://realpython.com/python-requests/
-    """
-
-    results_dict = {}
-    for myurl in url_dict:
-        try:
-            resp = requests.get(f"https://{myurl}", timeout=timeout)
-            status_code = resp.status_code
-            # print("resp", resp.status_code)
-            result = f"OK - {str(status_code)}"
-        except HTTPError as err:
-            print(f"HTTP error occurred: {err}")
-            result = f"OK - {str(err)}"
-        except requests.ConnectTimeout as err:
-            # print(f"{myurl} timed out with {err}")
-            result = f"Timeout - {str(err)}"
-        except requests.ConnectionError as err:
-            # print(f"{myurl} had the following connection error {err}")
-            result = f"Connection Error - {str(err)}"
-        except Exception as err:
-            print(f"Other error occurred - {err}")
-
-        results_dict[myurl] = result
-
-    return results_dict
-
-
-def print_results_from_dict(results_dict, header):
-    """
-    Prints out colour coded results from dictionary.
-    """
-
-    term = Terminal()
-
-    print(f"\n{term.bold} {term.underline} {header}: {term.normal}")
-    for key, value in results_dict.items():
-        if "OK - " in value:
-            print(f"{term.green}{term.bold}{key}: {term.normal} {value}")
-        else:
-            print(f"{term.red}{term.bold}{key}: {value}{term.normal}")
-
-
-def whatis_publicip(ip_check_url="https://ipinfo.io/ip", timeout=10):
-
-    try:
-        resp = requests.get(ip_check_url, timeout=timeout)
-    except Exception as err:
-        return err
-
-    return resp.text
-
-
 if __name__ == "__main__":
 
     ### Check Domain Names
@@ -100,7 +36,9 @@ if __name__ == "__main__":
     domain_results = curl_websites(url_dict=test_domains, timeout=2)
 
     print_results_from_dict(
-        results_dict=domain_results, header="Curl website domain name results"
+        results_dict=domain_results,
+        header="Curl website domain name results",
+        fmt_func_str="fmt_ok_error",
     )
 
     # ### Check IP addresses
@@ -110,12 +48,15 @@ if __name__ == "__main__":
         if "OK - " not in result
     }
 
-    #'print("failed_domain_ip_dict", failed_domain_ip_dict)
+    # print("failed_domain_ip_dict", failed_domain_ip_dict)
 
+    # TODO: sort out this logic
     ip_results = curl_websites(url_dict=failed_domain_ip_dict, timeout=2)
 
     print_results_from_dict(
-        results_dict=ip_results, header="Curl website IP address results"
+        results_dict=ip_results,
+        header="Curl website IP address results",
+        fmt_func_str="fmt_ok_error",
     )
 
     ##################
@@ -140,8 +81,17 @@ if __name__ == "__main__":
     ###
     iface_dict = get_iface_info()
 
-    for key, value in iface_dict.items():
-        print(key, value)
+    # print("\nKernel IP routing table")
+    # print("\nDestination\tIface")
+    # for destination, iface in iface_dict.items():
+    #     print(f"{destination}\t{iface}")
+
+    print_results_from_dict(
+        results_dict=iface_dict,
+        header="Kernel IP routing table",
+        fmt_func_str="fmt_bold_col1",
+    )
+    sys.exit(0)
 
     default_iface = iface_dict.get("default", None)
 
