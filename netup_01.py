@@ -139,6 +139,6 @@ if __name__ == "__main__":
         dns_servers=dns_servers, site_list=test_domains
     )
 
-    for key, values in dns_results_dict.items():
-        print("\nNameServer:", key)
-        print_dict_with_list_of_lists(list_of_lists=values)
+    # for key, values in dns_results_dict.items():
+    #     print("\nNameServer:", key)
+    dnserver_test_printer(dns_results_dict=dns_results_dict)

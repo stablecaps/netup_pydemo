@@ -2,9 +2,11 @@
 
 ## Overview
 
-A Python3 script to check network connectivity and suggest possible reasonsfor lost connectivity. Tested working on Ubuntu 20.04
+A Python3 script to check network connectivity and suggest possible reasonsfor lost connectivity. Tested working on Ubuntu 20.04.
 
 ## Dependencies
+
+Formatting & colour works best with green on black background. With anything else, your mileage may vary!
 
 ```
 python3.8
