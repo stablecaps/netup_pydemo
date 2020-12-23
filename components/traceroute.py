@@ -2,12 +2,12 @@
 
 import sys
 import re
-from helpers import (
+from components.helpers import (
     run_cmd_with_output,
     preprocess_subp_output,
     gen_dict_from_list_of_nelem_lists,
 )
-from printers import (
+from components.printers import (
     fmt_highlight_bold_yellow,
     fmt_error_bold_red,
     print_results_from_dict,

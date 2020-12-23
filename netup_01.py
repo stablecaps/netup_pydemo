@@ -1,8 +1,8 @@
 import os
 import sys
 from scapy.all import *
-from helpers import *
-from printers import *
+from components.helpers import *
+from components.printers import *
 from connectivity_checker import check_connectivity_main, check_publicip_main
 
 # Strategy:
