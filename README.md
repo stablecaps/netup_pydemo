@@ -9,10 +9,13 @@ A Python3 script to check network connectivity and suggest possible reasonsfor l
 Formatting & colour works best with green on black background. With anything else, your mileage may vary!
 
 ```
+Tested on ubuntu 20.04
 python3.8
 python3.8-vemv
 route
 nmcli
+nc (netcat)
+traceroute
 
 ```
 

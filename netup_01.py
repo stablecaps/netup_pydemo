@@ -1,7 +1,7 @@
 import os
 import sys
+from scapy.all import *
 from helpers import *
-
 from printers import *
 
 # Strategy:
@@ -17,9 +17,24 @@ from printers import *
 # 4. check broadband provider status
 # 5. check dns servers in
 
+
+def calculate_dns_fail_perecentage(results_dict, num_domains):
+    fail_list = [
+        value for value in list(results_dict.values()) if len(value.split(" ")) > 1
+    ]
+
+    num_fails = len(fail_list)
+
+    fail_percent = 0
+    if num_fails != 0:
+        fail_percent = (len(fail_list) / num_domains) * 100.0
+
+    return fail_percent
+
+
 check_url_dict = {
     "google.com": "216.58.204.228",
-    "simulate-error-tuydutyi.com": "8.8.8.8",
+    "simulate-error-tuydutyi.com": "8.8.8.8",  # 8.8.8.8 ip address simulates working dns
     "duckduckgo.com": "52.142.124.215",
     "www.bing.com": "13.107.21.200",
     "www.bbc.co.uk": "212.58.237.252",
@@ -32,34 +47,133 @@ if __name__ == "__main__":
     # print_all_ifaces - nmcli_printer()
     #
 
-    ### Check Domain Names
-    test_domains = list(check_url_dict.keys())
+    #################################################################
+    ### 1. Simple ping-like connectivity test for a connection
+    tcp_ping_commm = "nc -vz -w 5 www.google.com 8080"
+    tcp_ping = run_cmd_with_errorcode(comm_str=tcp_ping_commm)
 
-    domain_results = curl_websites(url_dict=test_domains, timeout=2)
+    if not tcp_ping:
+        fmt_error_bold_red(mystr="TCP Ping failed. Now checking connection settings..")
+        #################################################################
+        ### 2. Check basic connectivity to internet
+        iface_dict = get_iface_info()
 
-    print_results_from_dict(
-        results_dict=domain_results,
-        header="Curl website domain name results",
-        fmt_func_str="fmt_ok_error",
-    )
+        print_results_from_dict(
+            results_dict=iface_dict,
+            header="Kernel IP routing table",
+            fmt_func_str="fmt_bold_col1",
+        )
 
-    # ### Check IP addresses
-    failed_domain_ip_dict = {
-        check_url_dict[domain]: domain
-        for domain, result in domain_results.items()
-        if "OK - " not in result
-    }
+        default_iface = iface_dict.get("0.0.0.0", None)
 
-    # print("failed_domain_ip_dict", failed_domain_ip_dict)
+        if default_iface is None:
+            fmt_error_bold_red(
+                mystr=(
+                    "\nNo default gateway detected."
+                    + "\nPlease check network cable/connection."
+                    + "\nExiting.."
+                )
+            )
+            sys.exit(1)
 
-    # TODO: sort out this logic
-    ip_results = curl_websites(url_dict=failed_domain_ip_dict, timeout=2)
+        fmt_highlight_bold_yellow(mystr=f"Default iface is {default_iface}")
 
-    print_results_from_dict(
-        results_dict=ip_results,
-        header="Curl website IP address results",
-        fmt_func_str="fmt_ok_error",
-    )
+        ###
+        nmcli_all_dict = get_nmcli_info()
+
+        nmcli_printer(
+            nmcli_all_dict=nmcli_all_dict,
+            default_iface=default_iface,
+            print_all_ifaces=False,
+        )
+
+        active_nmcli_dict = gen_dict_from_list_of_2nelem_lists(
+            list_of_2nelem_lists=nmcli_all_dict[default_iface]
+        )
+
+        default_gateway = active_nmcli_dict.get("IP4.GATEWAY", None)
+
+        if default_gateway is None:
+            fmt_error_bold_red(
+                mystr="Cannot find default gateway. Possible configuration error.\n Exiting..."
+            )
+            sys.exit(1)
+
+        fmt_highlight_bold_yellow(mystr=f"Default gateway is {default_gateway}")
+
+        ################
+        public_ip_https = whatis_publicip(
+            ip_check_url="https://ipinfo.io/ip", timeout=2
+        )
+
+        if public_ip_https is None:
+            fmt_error_bold_red(
+                mystr="Cannot retrieve your public IP address over HTTPS."
+            )
+
+            print("Now checking via dig")
+
+            public_ip_dig = run_cmd_with_output(
+                comm_str="dig @resolver4.opendns.com myip.opendns.com +short"
+            )
+
+            if not public_ip_dig:
+                fmt_error_bold_red(
+                    mystr=(
+                        "Cannot retrieve your public IP address via dig."
+                        + "\n It is likely that the connection to your ISP is broken."
+                    )
+                )
+            else:
+                fmt_highlight_bold_yellow(
+                    mystr=f"Your public IP (via dig) is {public_ip_dig}"
+                    + "\nTherefore TCP connectivity is limited"
+                )
+                # TODO: Decide whether to exit here
+
+        else:
+            fmt_highlight_bold_yellow(
+                mystr=f"Your public IP (over HTTPS) is {public_ip_https}"
+            )
+
+        # sys.exit(0)
+
+        ### 3. Check Domain Names
+        print("\nNow testing DNS servers..")
+        test_domains = list(check_url_dict.keys())
+        len_test_domains = len(test_domains)
+
+        domain_results = curl_websites(url_dict=test_domains, timeout=2)
+
+        fail_percent1 = calculate_dns_fail_perecentage(
+            results_dict=domain_results, num_domains=len_test_domains
+        )
+
+        print_results_from_dict(
+            results_dict=domain_results,
+            header=f"Curl website domain-names had a failure rate of {fail_percent1}%",
+            fmt_func_str="fmt_ok_error",
+        )
+
+        ### 3. Check IP addresses
+        failed_domain_ip_dict = {
+            check_url_dict[domain]: domain
+            for domain, result in domain_results.items()
+            if "OK - " not in result
+        }
+
+        # TODO: sort out this logic
+        ip_results = curl_websites(url_dict=failed_domain_ip_dict, timeout=2)
+
+        fail_percent2 = calculate_dns_fail_perecentage(
+            results_dict=ip_results, num_domains=len_test_domains
+        )
+
+        print_results_from_dict(
+            results_dict=ip_results,
+            header=f"Curl website IP address had a failure rate of {fail_percent2}%",
+            fmt_func_str="fmt_ok_error",
+        )
 
     ##################
     ### Find network setup details
@@ -74,50 +188,6 @@ if __name__ == "__main__":
     # 4. check if dns servers are working
 
     ################################################################################
-
-    iface_dict = get_iface_info()
-
-    print_results_from_dict(
-        results_dict=iface_dict,
-        header="Kernel IP routing table",
-        fmt_func_str="fmt_bold_col1",
-    )
-
-    default_iface = iface_dict.get("0.0.0.0", None)
-
-    if default_iface is None:
-        fmt_error_bold_red(
-            mystr=(
-                "\n\nNo default gateway detected."
-                + "\nPlease check the connection to your router."
-                + "\nExiting.."
-            )
-        )
-        sys.exit(1)
-
-    ################
-    conx_data_dict = {}
-    public_ip = whatis_publicip(ip_check_url="https://ipinfo.io/ip", timeout=2)
-
-    # print("public_ip", public_ip)
-    conx_data_dict["public_ip"] = public_ip
-
-    ###
-    nmcli_all_dict = get_nmcli_info()
-
-    nmcli_printer(
-        nmcli_all_dict=nmcli_all_dict,
-        default_iface=default_iface,
-        print_all_ifaces=False,
-    )
-
-    # active_nmcli_dict = gen_nmcli_dict(
-    #     nmcli_all_dict=nmcli_all_dict, iface_name=default_iface
-    # )
-
-    active_nmcli_dict = gen_dict_from_list_of_2nlists(
-        list_of_2nlists=nmcli_all_dict[default_iface]
-    )
 
     ################################################################################
     ### Check Connection status

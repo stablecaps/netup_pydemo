@@ -1,3 +1,4 @@
+import sys
 import os
 import shlex
 import subprocess
@@ -37,13 +38,29 @@ def curl_websites(url_dict, timeout=10):
 
 
 def whatis_publicip(ip_check_url="https://ipinfo.io/ip", timeout=10):
-
     try:
         resp = requests.get(ip_check_url, timeout=timeout)
     except Exception as err:
-        return err
+        print(err)
+        return None
 
     return resp.text
+
+
+def run_cmd_with_errorcode(comm_str):
+
+    split_comm = shlex.split(comm_str, " ")
+
+    # remove all instances of empty string
+    split_comm_clean = list(filter(lambda a: a != "", split_comm))
+
+    try:
+        sp_resp = subprocess.check_output(split_comm_clean)
+    except subprocess.CalledProcessError as err:
+        print(f"error code  {err.returncode}")
+        return False
+
+    return sp_resp
 
 
 def run_cmd_with_output(comm_str):
@@ -52,18 +69,22 @@ def run_cmd_with_output(comm_str):
 
     # remove all instances of empty string
     split_comm_clean = list(filter(lambda a: a != "", split_comm))
-    sp_resp = subprocess.check_output(split_comm_clean)
-
-    return sp_resp
+    try:
+        sp_resp = subprocess.check_output(split_comm_clean)
+        return sp_resp
+    except Exception as err:
+        print("\n")
+        print(err)
+        return False
 
 
 def preprocess_subp_output(cmd_output, delimiter="\t", exclude_list=["", " "]):
 
     holder = []
     for line in cmd_output.decode().split("\n"):
-        #'print(line)
+        # print(line)
         splitty_line = line.split(delimiter)
-        #'print(splitty_line)
+        # print(splitty_line)
         filtered_line = [
             elem.strip() for elem in splitty_line if elem not in exclude_list
         ]
@@ -125,16 +146,31 @@ def get_nmcli_info():
 #     return lu_dict
 
 
-def gen_dict_from_list_of_2nlists(list_of_2nlists):
+def gen_dict_from_list_of_2nelem_lists(list_of_2nelem_lists):
     """
-    Takes in a list_of_2nlists such as [[key1, val1], [key2, val2], [key3, val3]]
+    Takes in a list_of_2nelem_lists such as [[key1, val1], [key2, val2], [key3, val3]]
     and returns a dictionary.
     """
 
     mydict = {}
-    for val_subli in list_of_2nlists:
+    for val_subli in list_of_2nelem_lists:
         key = val_subli[0]
         value = val_subli[1]
+        mydict[key] = value
+
+    return mydict
+
+
+def gen_dict_from_list_of_nelem_lists(list_of_nelem_lists, keyn=1, valn=-1):
+    """
+    Takes in a list_of_2nelem_lists such as [[key1, val1], [key2, val2], [key3, val3]]
+    and returns a dictionary.
+    """
+
+    mydict = {}
+    for val_subli in list_of_nelem_lists:
+        key = " ".join(val_subli[:keyn])
+        value = " ".join(val_subli[valn:])
         mydict[key] = value
 
     return mydict
