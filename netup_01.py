@@ -1,9 +1,8 @@
 import os
 import sys
-from scapy.all import *
-from components.helpers import *
-from components.printers import *
-from connectivity_checker import check_connectivity_main, check_publicip_main
+from components.helpers import run_cmd_with_errorcode
+from components.printers import fmt_error_bold_red
+from components.connectivity_checker import check_connectivity_main, check_publicip_main
 
 # Strategy:
 # Start with higher level requests, then move towards more granular tests

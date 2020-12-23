@@ -1,6 +1,6 @@
 import sys
 from blessings import Terminal
-from helpers import gen_dict_from_list_of_2nelem_lists
+from components.helpers import gen_dict_from_list_of_2nelem_lists
 
 
 def find_longest_string_from_dict(mydict, mode="keys"):

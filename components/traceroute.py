@@ -62,6 +62,7 @@ def execute_and_preprocess_traceroute():
             fmted_holder.append(fmt_row)
 
             total_times_ms.append(avg_time)
+
     return (fmted_holder, total_times_ms, header)
 
 
@@ -80,6 +81,7 @@ def gen_latency_data_structs(total_times_ms, fmted_holder):
         if hop_time > LARGE_THRESHOLD:
             large_latency_idx.append(int(fmted_holder[idx][0]))
             large_latency_str.append(fmted_holder[idx])
+
     return (large_latency_idx, large_latency_str)
 
 
@@ -94,6 +96,7 @@ def gen_fmted_str_holder(fmted_holder):
         time_str = f"{str(row[-1])} ms average"
         row[-1] = time_str
         fmted_holder_str.append(row)
+
     return fmted_holder_str
 
 
@@ -162,6 +165,7 @@ def evaluate_final_message(final_hop, len_fmted_holder_str):
             "\nIssues reaching target are potentially *outside* your local network"
         )
 
+    ###
     if not name_hit:
         fmt_error_bold_red(mystr=hit_str)
     else:

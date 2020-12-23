@@ -1,11 +1,26 @@
-import os
+"""Check connectivity using route and nmcli."""
+
 import sys
-from scapy.all import *
-from helpers import *
-from printers import *
+from components.helpers import (
+    get_iface_info,
+    get_nmcli_info,
+    whatis_publicip,
+    run_cmd_with_output,
+    gen_dict_from_list_of_2nelem_lists,
+)
+from components.printers import (
+    print_results_from_dict,
+    fmt_highlight_bold_yellow,
+    fmt_error_bold_red,
+    nmcli_printer,
+)
 
 
 def check_connectivity_main():
+    """
+    Checks connection details using route & nmcli.
+    """
+
     iface_dict = get_iface_info()
 
     print_results_from_dict(
@@ -53,6 +68,12 @@ def check_connectivity_main():
 
 
 def check_publicip_main():
+    """
+    Main routine to check:
+    1.  users basic connection details & gateway (router) situation
+    2.  users public IP address can be retrived via an https lookup or alternatively via dig
+    """
+
     public_ip_https = whatis_publicip(ip_check_url="https://ipinfo.io/ip", timeout=2)
 
     if public_ip_https is None:
@@ -60,10 +81,12 @@ def check_publicip_main():
 
         print("Now checking via dig")
 
+        # dig @resolver4.opendns.com myip.opendns.com +short
         public_ip_dig = run_cmd_with_output(
-            comm_str="dig @resolver4.opendns.com myip.opendns.com +short"
+            comm_str="dig @208.67.220.222 myip.opendns.com +short"
         )
 
+        ############################################################
         if not public_ip_dig:
             fmt_error_bold_red(
                 mystr=(
@@ -77,6 +100,7 @@ def check_publicip_main():
                 + "\nTherefore TCP connectivity is limited"
             )
             # TODO: Decide whether to exit here
+        ############################################################
     else:
         fmt_highlight_bold_yellow(
             mystr=f"Your public IP (over HTTPS) is {public_ip_https}"
