@@ -19,7 +19,7 @@ def calculate_dns_fail_perecentage(results_dict, num_domains):
     return fail_percent
 
 
-def main():
+def dns_check_main():
     ### 3. Check Domain Names
     print("\nNow testing DNS servers..")
     test_domains = list(check_url_dict.keys())
@@ -94,3 +94,7 @@ def main():
     # for key, values in dns_results_dict.items():
     #     print("\nNameServer:", key)
     dnserver_test_printer(dns_results_dict=dns_results_dict)
+
+
+if __name__ == "__main__":
+    dns_check_main()

@@ -1,3 +1,5 @@
+"""Helper functions."""
+
 import sys
 import os
 import shlex
@@ -5,6 +7,14 @@ import subprocess
 import requests
 from requests.exceptions import HTTPError
 import dns.resolver
+
+check_url_dict = {
+    "google.com": "216.58.204.228",
+    "simulate-error-tuydutyi.com": "8.8.8.8",  # 8.8.8.8 ip address simulates working dns
+    "duckduckgo.com": "52.142.124.215",
+    "www.bing.com": "13.107.21.200",
+    "www.bbc.co.uk": "212.58.237.252",
+}
 
 
 def curl_websites(url_dict, timeout=10):
@@ -18,16 +28,13 @@ def curl_websites(url_dict, timeout=10):
         try:
             resp = requests.get(f"https://{myurl}", timeout=timeout)
             status_code = resp.status_code
-            # print("resp", resp.status_code)
             result = f"OK - {str(status_code)}"
         except HTTPError as err:
             print(f"HTTP error occurred: {err}")
             result = f"OK - {str(err)}"
         except requests.ConnectTimeout as err:
-            # print(f"{myurl} timed out with {err}")
             result = f"Timeout - {str(err)}"
         except requests.ConnectionError as err:
-            # print(f"{myurl} had the following connection error {err}")
             result = f"Connection Error - {str(err)}"
         except Exception as err:
             print(f"Other error occurred - {err}")
