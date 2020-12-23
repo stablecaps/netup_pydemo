@@ -227,9 +227,6 @@ def traceroute_main():
     )
 
 
-if __name__ == "__main__":
-    traceroute_main()
-
 # normal
 # total_times_ms = [3.027, 20.703, 24.596, 22.152, 27.031, 27.322, 23.536]
 # fmted_holder = [

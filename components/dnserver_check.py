@@ -1,11 +1,14 @@
-import os
-import sys
-from scapy.all import *
-from helpers import *
-from printers import *
+"""Check ability of dns servers to resolve sites."""
+
+from components.helpers import check_url_dict, curl_websites, check_dns_servers
+from components.printers import print_results_from_dict, dnserver_test_printer
 
 
 def calculate_dns_fail_perecentage(results_dict, num_domains):
+    """
+    Calculate the percentage failed dns lookups for one dns server.
+    """
+
     fail_list = [
         value for value in list(results_dict.values()) if len(value.split(" ")) > 1
     ]
@@ -19,9 +22,16 @@ def calculate_dns_fail_perecentage(results_dict, num_domains):
     return fail_percent
 
 
-def dns_check_main():
+def dns_check_main(active_nmcli_dict):
+    """
+    Main routine to check dns servers bt:
+        1. domain name
+        2. IP address
+    """
+
     ### 3. Check Domain Names
     print("\nNow testing DNS servers..")
+
     test_domains = list(check_url_dict.keys())
     len_test_domains = len(test_domains)
 
@@ -38,14 +48,11 @@ def dns_check_main():
     )
 
     ### 3. Check IP addresses
-    failed_domain_ip_dict = {
-        check_url_dict[domain]: domain
-        for domain, result in domain_results.items()
-        if "OK - " not in result
+    ip_dict = {
+        check_url_dict[domain]: domain for domain, result in domain_results.items()
     }
 
-    # TODO: sort out this logic
-    ip_results = curl_websites(url_dict=failed_domain_ip_dict, timeout=2)
+    ip_results = curl_websites(url_dict=ip_dict, timeout=2)
 
     fail_percent2 = calculate_dns_fail_perecentage(
         results_dict=ip_results, num_domains=len_test_domains
@@ -72,12 +79,6 @@ def dns_check_main():
     ################################################################################
 
     ################################################################################
-    ### Check Connection status
-
-    # connx_status = active_nmcli_dict.get("GENERAL.STATE", None)
-    # print("connx_status", connx_status)
-    #'sys.exit(0)
-
     ### Check DNS servers
     dns_servers = [
         value for key, value in active_nmcli_dict.items() if "IP4.DNS" in key
@@ -94,7 +95,3 @@ def dns_check_main():
     # for key, values in dns_results_dict.items():
     #     print("\nNameServer:", key)
     dnserver_test_printer(dns_results_dict=dns_results_dict)
-
-
-if __name__ == "__main__":
-    dns_check_main()

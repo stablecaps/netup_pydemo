@@ -3,6 +3,7 @@ import sys
 from components.helpers import run_cmd_with_errorcode
 from components.printers import fmt_error_bold_red
 from components.connectivity_checker import check_connectivity_main, check_publicip_main
+from components.dnserver_check import dns_check_main
 
 # Strategy:
 # Start with higher level requests, then move towards more granular tests
@@ -33,7 +34,7 @@ if __name__ == "__main__":
         fmt_error_bold_red(mystr="TCP Ping failed. Now checking connection settings..")
         #################################################################
         ### 2. Check basic connectivity to internet
-        check_connectivity_main()
+        active_nmcli_dict = check_connectivity_main()
 
         ################
         ## 3. Check whether public IP is assigned
@@ -41,3 +42,7 @@ if __name__ == "__main__":
 
         ################
         ## 4. Check traceroute
+
+        ################
+        ## 5. Check DNS servers
+        dns_check_main(active_nmcli_dict=active_nmcli_dict)

@@ -1,9 +1,17 @@
+"""Functions to assist printing to the terminal."""
+
 import sys
 from blessings import Terminal
 from components.helpers import gen_dict_from_list_of_2nelem_lists
 
 
 def find_longest_string_from_dict(mydict, mode="keys"):
+    """
+    Return an integer corresponding to the greatest number of characters
+    from all the keys or values in a dictionary.
+    `mode` sets whether keys or values are searched.
+    """
+
     if mode == "keys":
         dict_list = list(mydict.keys())
     elif mode == "values":
@@ -16,16 +24,30 @@ def find_longest_string_from_dict(mydict, mode="keys"):
 
 
 def fmt_error_bold_red(mystr):
+    """
+    Return a string formatted in bold red.
+    """
+
     term = Terminal()
     print(f"\n{term.red}{term.bold}{mystr}{term.normal}")
 
 
 def fmt_highlight_bold_yellow(mystr):
+    """
+    Return a string formatted in bold yellow.
+    """
+
     term = Terminal()
     print(f"\n{term.yellow}{term.bold}{mystr}{term.normal}")
 
 
 def fmt_ok_error(results_dict):
+    """
+    Return a key value pair with value formatted in red if it does not contain
+    the substring "OK".
+    Key is always green bold.
+    """
+
     term = Terminal()
 
     max_spaces = find_longest_string_from_dict(mydict=results_dict, mode="keys")
@@ -40,6 +62,11 @@ def fmt_ok_error(results_dict):
 
 
 def fmt_keyok_valerror(results_dict):
+    """
+    Return a key value pair with value always formatted in red.
+    Key is always green bold.
+    """
+
     term = Terminal()
 
     max_spaces = find_longest_string_from_dict(mydict=results_dict, mode="keys")
@@ -51,6 +78,13 @@ def fmt_keyok_valerror(results_dict):
 
 
 def fmt_ok_error_dns(results_dict):
+    """
+    Return a key value pair with value formatted in red if it does not contain
+    the substring starts with "The DNS".
+    Key is always green bold.
+    """
+
+    # TODO: see if this can be combined with fmt_ok_error()
     term = Terminal()
 
     max_spaces = find_longest_string_from_dict(mydict=results_dict, mode="keys")
@@ -65,6 +99,12 @@ def fmt_ok_error_dns(results_dict):
 
 
 def fmt_bold_col1(results_dict):
+    """
+    Return a key value pair with value always normal font.
+    Key is always green bold.
+    All text is green
+    """
+
     term = Terminal()
 
     max_spaces = find_longest_string_from_dict(mydict=results_dict, mode="keys")
@@ -84,7 +124,8 @@ fmt_func_dict = {
 
 def print_results_from_dict(results_dict, header, fmt_func_str):
     """
-    Prints out colour coded results from dictionary.
+    Prints out colour coded results from dictionary with user defined header.
+    `fmt_func_str` is used to lookup functions stored in `fmt_func_dict`
     """
 
     term = Terminal()
@@ -95,6 +136,11 @@ def print_results_from_dict(results_dict, header, fmt_func_str):
 
 ###################################################################
 def nmcli_printer(nmcli_all_dict, default_iface, print_all_ifaces=False):
+    """
+    Prints out colour coded results from dictionary containing nmcli data.
+    Option `print_all_ifaces` prints all interface data.
+    By default only the default interface is printed out.
+    """
 
     iface_name_li = [default_iface]
     if print_all_ifaces:
@@ -113,6 +159,9 @@ def nmcli_printer(nmcli_all_dict, default_iface, print_all_ifaces=False):
 
 
 def dnserver_test_printer(dns_results_dict):
+    """
+    Prints out colour coded results from dictionary containing dns server data.
+    """
 
     for dns_name, list_of_2nelem_lists in dns_results_dict.items():
         dns_dict = gen_dict_from_list_of_2nelem_lists(
