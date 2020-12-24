@@ -12,15 +12,42 @@ Formatting & colour works best with green on black background. With anything els
 Tested on ubuntu 20.04
 python3.8
 python3.8-vemv
-route
-nmcli
+route (built into 20.04)
+nmcli (built into 20.04)
 nc (netcat)
 traceroute
+```
 
+## Install
+```
+sudo apt install python3.8 python3.8-venv python3.8-venv netcat traceroute
+```
+
+```
+python3.8 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 ```
 
 ## Usage
 
+```
+# Launch publicip subroutine
+python netup_luncher.py publicip
+
+# Launch connection subroutine
+python netup_luncher.py connx
+
+# Launch dns server checker subroutine
+python netup_luncher.py dns
+
+# Launch traceroute subroutine
+python netup_luncher.py traceroute
+
+# Launch all routines
+python netup_luncher.py all
+
+```
 
 #### simulate dns fail
 https://serverfault.com/questions/776049/how-to-simulate-dns-server-response-timeout
