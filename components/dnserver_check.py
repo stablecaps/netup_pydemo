@@ -1,10 +1,10 @@
 """Check ability of dns servers to resolve sites."""
 
 from components.helpers import check_url_dict, curl_websites, check_dns_servers
-from components.printers import print_results_from_dict, dnserver_test_printer
+from components.printers import print_dict_results, dns_printer
 
 
-def calculate_dns_fail_perecentage(results_dict, num_domains):
+def calc_dns_fail_percent(results_dict, num_domains):
     """
     Calculate the percentage failed dns lookups for one dns server.
     """
@@ -37,11 +37,11 @@ def dns_check_main(active_nmcli_dict):
 
     domain_results = curl_websites(url_dict=test_domains, timeout=2)
 
-    fail_percent1 = calculate_dns_fail_perecentage(
+    fail_percent1 = calc_dns_fail_percent(
         results_dict=domain_results, num_domains=len_test_domains
     )
 
-    print_results_from_dict(
+    print_dict_results(
         results_dict=domain_results,
         header=f"Curl website domain-names had a failure rate of {fail_percent1}%",
         fmt_func_str="fmt_ok_error",
@@ -54,11 +54,11 @@ def dns_check_main(active_nmcli_dict):
 
     ip_results = curl_websites(url_dict=ip_dict, timeout=2)
 
-    fail_percent2 = calculate_dns_fail_perecentage(
+    fail_percent2 = calc_dns_fail_percent(
         results_dict=ip_results, num_domains=len_test_domains
     )
 
-    print_results_from_dict(
+    print_dict_results(
         results_dict=ip_results,
         header=f"Curl website IP address had a failure rate of {fail_percent2}%",
         fmt_func_str="fmt_ok_error",
@@ -94,4 +94,4 @@ def dns_check_main(active_nmcli_dict):
 
     # for key, values in dns_results_dict.items():
     #     print("\nNameServer:", key)
-    dnserver_test_printer(dns_results_dict=dns_results_dict)
+    dns_printer(dns_results_dict=dns_results_dict)

@@ -3,8 +3,8 @@
 import sys
 import argparse
 from components.helpers import run_cmd_with_errorcode
-from components.printers import fmt_error_bold_red
-from components.connectivity_checker import check_connectivity_main, check_publicip_main
+from components.printers import fmt_bold_red
+from components.connectivity_checker import check_connx_main, check_publicip_main
 from components.dnserver_check import dns_check_main
 from components.traceroute import traceroute_main
 
@@ -53,7 +53,7 @@ class NetupLauncher:
         """Launch subroutine to check connection details using route & nmcli"""
 
         print("\nLaunching route & nmcli subroutine...\n")
-        check_connectivity_main()
+        check_connx_main()
         print("\nExiting.")
 
     @staticmethod
@@ -70,7 +70,8 @@ class NetupLauncher:
         """Launch subroutine to check DNS Servers"""
 
         print("\nLaunching DNS Server check subroutine...\n")
-        active_nmcli_dict = check_connectivity_main()
+        active_nmcli_dict = check_connx_main()
+
         dns_check_main(active_nmcli_dict=active_nmcli_dict)
 
         print("\nExiting.")
@@ -96,12 +97,10 @@ class NetupLauncher:
         tcp_ping = run_cmd_with_errorcode(comm_str=tcp_ping_commm)
 
         if not tcp_ping:
-            fmt_error_bold_red(
-                mystr="TCP Ping failed. Now checking connection settings.."
-            )
+            fmt_bold_red(mystr="TCP Ping failed. Now checking connection settings..")
             #################################################################
             ### 2. Check basic connectivity to internet
-            active_nmcli_dict = check_connectivity_main()
+            active_nmcli_dict = check_connx_main()
 
             ################
             ## 3. Check whether public IP is assigned

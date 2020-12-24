@@ -4,19 +4,19 @@ import sys
 import re
 from components.helpers import (
     run_cmd_with_output,
-    preprocess_subp_output,
+    process_subp_output,
     gen_dict_from_list_of_nelem_lists,
 )
 from components.printers import (
-    fmt_highlight_bold_yellow,
-    fmt_error_bold_red,
-    print_results_from_dict,
+    fmt_bold_yellow,
+    fmt_bold_red,
+    print_dict_results,
 )
 
 LARGE_THRESHOLD = 150
 
 
-def execute_and_preprocess_traceroute():
+def run_and_process_traceroute():
     """
     Macro function that:
         1. runs traceroute
@@ -31,10 +31,10 @@ def execute_and_preprocess_traceroute():
     trace = run_cmd_with_output(comm_str=traceroute_comm)
 
     if not trace:
-        fmt_error_bold_red(mystr="Check your network cable/connection..")
+        fmt_bold_red(mystr="Check your network cable/connection..")
         sys.exit(1)
 
-    trace_fmt = preprocess_subp_output(
+    trace_fmt = process_subp_output(
         cmd_output=trace, delimiter=" ", exclude_list=["", " ", "*", "ms"]
     )
 
@@ -66,7 +66,7 @@ def execute_and_preprocess_traceroute():
     return (fmted_holder, total_times_ms, header)
 
 
-def gen_latency_data_structs(total_times_ms, fmted_holder):
+def find_high_latency_hops(total_times_ms, fmted_holder):
     """
     Detects which averaged timings are > LARGE_THRESHOLD.
     Returns:
@@ -112,7 +112,7 @@ def is_local_latency_high(large_latency_idx):
     return False
 
 
-def evaluate_high_hop_latency_message(large_latency_str, large_latency_idx):
+def eval_high_hop_latency_msg(large_latency_str, large_latency_idx):
     """
     Prints messages to screen identifying hops with high latency and potential causes.
     """
@@ -122,8 +122,8 @@ def evaluate_high_hop_latency_message(large_latency_str, large_latency_idx):
             list_of_nelem_lists=large_latency_str, keyn=2, valn=-1
         )
 
-        fmt_error_bold_red(mystr="Hops with large latencies found:")
-        print_results_from_dict(
+        fmt_bold_red(mystr="Hops with large latencies found:")
+        print_dict_results(
             results_dict=largehop_dict,
             header=f"Hops with large latency (> {LARGE_THRESHOLD} ms)",
             fmt_func_str="fmt_keyok_valerror",
@@ -131,7 +131,7 @@ def evaluate_high_hop_latency_message(large_latency_str, large_latency_idx):
 
         local_hop_high = is_local_latency_high(large_latency_idx=large_latency_idx)
         if local_hop_high:
-            fmt_error_bold_red(
+            fmt_bold_red(
                 mystr=(
                     "! High latencies near traceroute start.\n"
                     + "Issues are likely to be present in your local network or with your ISP"
@@ -139,7 +139,7 @@ def evaluate_high_hop_latency_message(large_latency_str, large_latency_idx):
             )
 
 
-def evaluate_final_message(final_hop, len_fmted_holder_str):
+def eval_final_msg(final_hop, len_fmted_holder_str):
     """
     Prints messages to screen identifying  whether the target destination was hit or not with
     potential causes. (Unfinished)
@@ -167,11 +167,9 @@ def evaluate_final_message(final_hop, len_fmted_holder_str):
 
     ###
     if not name_hit:
-        fmt_error_bold_red(mystr=hit_str)
+        fmt_bold_red(mystr=hit_str)
     else:
-        fmt_highlight_bold_yellow(
-            mystr="Successfully connected to dns.google (8.8.8.8)"
-        )
+        fmt_bold_yellow(mystr="Successfully connected to dns.google (8.8.8.8)")
 
 
 def traceroute_main():
@@ -189,9 +187,9 @@ def traceroute_main():
     """
 
     ### Run traceroute
-    fmted_holder, total_times_ms, header = execute_and_preprocess_traceroute()
+    fmted_holder, total_times_ms, header = run_and_process_traceroute()
 
-    large_latency_idx, large_latency_str = gen_latency_data_structs(
+    large_latency_idx, large_latency_str = find_high_latency_hops(
         total_times_ms=total_times_ms, fmted_holder=fmted_holder
     )
 
@@ -203,18 +201,18 @@ def traceroute_main():
 
     #########################################################
     ### Print traceroute results
-    print_results_from_dict(
+    print_dict_results(
         results_dict=trace_dict,
         header=header,
         fmt_func_str="fmt_bold_col1",
     )
 
     fmt_total_time = round(sum(total_times_ms), 3)
-    fmt_highlight_bold_yellow(mystr=f"\n Total time: {fmt_total_time} ms")
+    fmt_bold_yellow(mystr=f"\n Total time: {fmt_total_time} ms")
 
     #########################################################
     ## Print hops with large latency
-    evaluate_high_hop_latency_message(
+    eval_high_hop_latency_msg(
         large_latency_str=large_latency_str, large_latency_idx=large_latency_idx
     )
 
@@ -222,9 +220,7 @@ def traceroute_main():
     ### Check to see if we are hitting destination
     final_hop = fmted_holder_str[-1][1]
     len_fmted_holder_str = len(fmted_holder_str)
-    evaluate_final_message(
-        final_hop=final_hop, len_fmted_holder_str=len_fmted_holder_str
-    )
+    eval_final_msg(final_hop=final_hop, len_fmted_holder_str=len_fmted_holder_str)
 
 
 # normal

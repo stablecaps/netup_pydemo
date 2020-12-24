@@ -97,7 +97,7 @@ def run_cmd_with_output(comm_str):
         return False
 
 
-def preprocess_subp_output(cmd_output, delimiter="\t", exclude_list=["", " "]):
+def process_subp_output(cmd_output, delimiter="\t", exclude_list=["", " "]):
     """
     Preprocesses output from subprocess command and returns a list of lists,
     Each sublist corresponds to a row in the output.

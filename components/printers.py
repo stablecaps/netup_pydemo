@@ -5,7 +5,7 @@ from blessings import Terminal
 from components.helpers import gen_dict_from_list_of_2nelem_lists
 
 
-def find_longest_string_from_dict(mydict, mode="keys"):
+def get_longest_str_in_dict(mydict, mode="keys"):
     """
     Return an integer corresponding to the greatest number of characters
     from all the keys or values in a dictionary.
@@ -23,7 +23,7 @@ def find_longest_string_from_dict(mydict, mode="keys"):
     return len(max(dict_list, key=len))
 
 
-def fmt_error_bold_red(mystr):
+def fmt_bold_red(mystr):
     """
     Return a string formatted in bold red.
     """
@@ -32,7 +32,7 @@ def fmt_error_bold_red(mystr):
     print(f"\n{term.red}{term.bold}{mystr}{term.normal}")
 
 
-def fmt_highlight_bold_yellow(mystr):
+def fmt_bold_yellow(mystr):
     """
     Return a string formatted in bold yellow.
     """
@@ -50,7 +50,7 @@ def fmt_ok_error(results_dict):
 
     term = Terminal()
 
-    max_spaces = find_longest_string_from_dict(mydict=results_dict, mode="keys")
+    max_spaces = get_longest_str_in_dict(mydict=results_dict, mode="keys")
     for key, value in results_dict.items():
         key_just = (key + ":").ljust(max_spaces, " ")
         if "OK - " in value:
@@ -69,7 +69,7 @@ def fmt_keyok_valerror(results_dict):
 
     term = Terminal()
 
-    max_spaces = find_longest_string_from_dict(mydict=results_dict, mode="keys")
+    max_spaces = get_longest_str_in_dict(mydict=results_dict, mode="keys")
     for key, value in results_dict.items():
         key_just = (key + ":").ljust(max_spaces, " ")
         print(
@@ -87,7 +87,7 @@ def fmt_ok_error_dns(results_dict):
     # TODO: see if this can be combined with fmt_ok_error()
     term = Terminal()
 
-    max_spaces = find_longest_string_from_dict(mydict=results_dict, mode="keys")
+    max_spaces = get_longest_str_in_dict(mydict=results_dict, mode="keys")
     for key, value in results_dict.items():
         key_just = (key + ":").ljust(max_spaces, " ")
         if value.startswith("The DNS"):
@@ -107,7 +107,7 @@ def fmt_bold_col1(results_dict):
 
     term = Terminal()
 
-    max_spaces = find_longest_string_from_dict(mydict=results_dict, mode="keys")
+    max_spaces = get_longest_str_in_dict(mydict=results_dict, mode="keys")
     for key, value in results_dict.items():
         key_just = (key + ":").ljust(max_spaces, " ")
         print(f"{term.green}{term.bold}{key_just} \t{term.normal}{value}")
@@ -122,7 +122,7 @@ fmt_func_dict = {
 }
 
 
-def print_results_from_dict(results_dict, header, fmt_func_str):
+def print_dict_results(results_dict, header, fmt_func_str):
     """
     Prints out colour coded results from dictionary with user defined header.
     `fmt_func_str` is used to lookup functions stored in `fmt_func_dict`
@@ -151,14 +151,14 @@ def nmcli_printer(nmcli_all_dict, default_iface, print_all_ifaces=False):
             list_of_2nelem_lists=nmcli_all_dict[iface]
         )
 
-        print_results_from_dict(
+        print_dict_results(
             results_dict=iface_dict,
             header=f"Iface info for: {iface}",
             fmt_func_str="fmt_bold_col1",
         )
 
 
-def dnserver_test_printer(dns_results_dict):
+def dns_printer(dns_results_dict):
     """
     Prints out colour coded results from dictionary containing dns server data.
     """
@@ -168,7 +168,7 @@ def dnserver_test_printer(dns_results_dict):
             list_of_2nelem_lists=list_of_2nelem_lists
         )
 
-        print_results_from_dict(
+        print_dict_results(
             results_dict=dns_dict,
             header=f"NameServer {dns_name} Lookup results:",
             fmt_func_str="fmt_ok_error_dns",
