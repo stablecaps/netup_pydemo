@@ -1,3 +1,5 @@
+"""Main entrpoint to run code taht checks and evaluates reasons for loss in internet connectivity."""
+
 import os
 import sys
 from components.helpers import run_cmd_with_errorcode

@@ -135,8 +135,10 @@ def gen_dict_from_list_of_2nelem_lists(list_of_2nelem_lists):
 
 def gen_dict_from_list_of_nelem_lists(list_of_nelem_lists, keyn=1, valn=-1):
     """
-    Takes in a list_of_2nelem_lists such as [[key1, val1], [key2, val2], [key3, val3]]
+    Takes in a list_of_nelem_lists such as [[val1, val2, val3, ..., ...], [val1, val2, val3, ..., ...], [val1, val2, val3, ..., ...]]
     and returns a dictionary.
+    keyn allows user to specify index to slice to `:keyn` (i.e. start --> middle)
+    valn allows user to specify index to slice from `:valn` (i.e. middle --> end)
     """
 
     mydict = {}
