@@ -2,10 +2,10 @@
 
 import sys
 import argparse
-from components.helpers import run_cmd_with_errorcode
+from components.helpers import run_cmd_with_errorcode, check_url_dict
 from components.printers import fmt_bold_red
 from components.connectivity_checker import check_connx_main, check_publicip_main
-from components.dnserver_check import dns_check_main
+from components.dnserver_check import DNSServers
 from components.traceroute import traceroute_main
 
 # Strategy:
@@ -72,7 +72,10 @@ class NetupLauncher:
         print("\nLaunching DNS Server check subroutine...\n")
         active_nmcli_dict = check_connx_main()
 
-        dns_check_main(active_nmcli_dict=active_nmcli_dict)
+        dns_test = DNSServers(
+            active_nmcli_dict=active_nmcli_dict, check_url_dict=check_url_dict
+        )
+        dns_test.dns_check_main()
 
         print("\nExiting.")
 
@@ -112,7 +115,10 @@ class NetupLauncher:
 
             ################
             ## 5. Check DNS servers
-            dns_check_main(active_nmcli_dict=active_nmcli_dict)
+            dns_test = DNSServers(
+                active_nmcli_dict=active_nmcli_dict, check_url_dict=check_url_dict
+            )
+            dns_test.dns_check_main()
 
             print("\nExiting.")
 

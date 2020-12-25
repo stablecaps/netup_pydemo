@@ -3,140 +3,184 @@
 import dns.resolver
 import dns.rdatatype
 from components.helpers import (
-    check_url_dict,
     curl_websites,
     list_of_2nelem_lists_2dict,
 )
-from components.printers import print_dict_results
+from components.printers import print_dict_results, fmt_bold_yellow, fmt_bold_red
 
 
-def calc_dns_fail_percent(results_dict, num_domains):
-    """
-    Calculate the percentage failed dns lookups for one dns server.
-    """
+class DNSServers:
+    """Class to check Domain names via HTTPS and Nameserver queries."""
 
-    fail_list = [
-        value for value in list(results_dict.values()) if value.split(" ")[0] != "OK"
-    ]
+    def __init__(self, active_nmcli_dict, check_url_dict):
+        self.active_nmcli_dict = active_nmcli_dict
+        self.check_url_dict = check_url_dict
+        self.test_domains = list(self.check_url_dict.keys())
+        self.num_domains = len(self.test_domains)
 
-    num_fails = len(fail_list)
+    def calc_dns_fail_percent(self, results_dict):
+        """
+        Calculate the percentage failed dns lookups for one dns server.
+        """
 
-    fail_percent = 0.0
-    if num_fails != 0:
-        fail_percent = (len(fail_list) / num_domains) * 100.0
+        fail_list = [
+            value
+            for value in list(results_dict.values())
+            if value.split(" ")[0] != "OK"
+        ]
 
-    return fail_percent
+        num_fails = len(fail_list)
 
+        fail_percent = 0.0
+        if num_fails != 0:
+            fail_percent = (len(fail_list) / self.num_domains) * 100.0
 
-def print_with_dns_header(results_dict, header, len_test_domains):
-    """Print curl result with percentage fail number in header."""
+        return fail_percent
 
-    fail_percent = calc_dns_fail_percent(
-        results_dict=results_dict, num_domains=len_test_domains
-    )
-    print_dict_results(
-        results_dict=results_dict,
-        header=f"{header} {fail_percent}%",
-        fmt_func_str="fmt_ok_error",
-    )
+    def print_with_dns_header(self, results_dict, header):
+        """Print curl result with percentage fail number in header."""
 
-
-def query_dns_via_udp(nameserver, mydomain):
-
-    where = nameserver
-
-    qry = dns.message.make_query(mydomain, dns.rdatatype.A)
-
-    try:
-        resp = dns.query.udp(
-            qry, where, timeout=5, port=53, one_rr_per_rrset=True, ignore_trailing=True
+        fail_percent = self.calc_dns_fail_percent(results_dict=results_dict)
+        print_dict_results(
+            results_dict=results_dict,
+            header=f"{header} {fail_percent}%",
+            fmt_func_str="fmt_ok_error",
         )
-    except Exception as err:
-        return f" Fail - {err}"
 
-    a_record_matches = []
-    for ans in resp.answer:
-        for item in ans.items:
-            if ans.rdtype == dns.rdatatype.A:
-                a_record_matches.append(item.address)
+        return fail_percent
 
-    if len(a_record_matches) != 0:
-        a_record_str = "OK - " + ", ".join(a_record_matches)
-    else:
-        a_record_str = " Fail - Lookup returned no results"
+    def find_name_servers(self):
+        dns_servers = [
+            value for key, value in self.active_nmcli_dict.items() if "IP4.DNS" in key
+        ]
 
-    return a_record_str
+        self.added_google_ns = False
+        ### Add google dns server to list if not already present
+        if "8.8.8.8" not in dns_servers:
+            self.added_google_ns = True
+            dns_servers.append("8.8.8.8")
 
+        self.dns_servers = dns_servers
 
-def check_dns_servers(dns_servers, site_list):
-    """
-    Try to resolve sites by checking each dns servers individually.
-    """
+    @staticmethod
+    def query_dns_via_udp(nameserver, mydomain):
 
-    dns_results_dict = {}
-    for mydns in dns_servers:
-        dns_results_dict[mydns] = []
-        for site in site_list:
-            ip_arecords = query_dns_via_udp(nameserver=mydns, mydomain=site)
+        where = nameserver
 
-            dns_results_dict[mydns].append([site, ip_arecords])
-    return dns_results_dict
+        qry = dns.message.make_query(mydomain, dns.rdatatype.A)
 
+        try:
+            resp = dns.query.udp(
+                qry,
+                where,
+                timeout=5,
+                port=53,
+                one_rr_per_rrset=True,
+                ignore_trailing=True,
+            )
+        except Exception as err:
+            return f" Fail - {err}"
 
-def dns_check_main(active_nmcli_dict):
-    """
-    Main routine to check dns servers bt:
-        1. domain name
-        2. IP address
-    Assumes that google dns server 8.8.8.8 is highly available
-    """
+        a_record_matches = []
+        for ans in resp.answer:
+            for item in ans.items:
+                if ans.rdtype == dns.rdatatype.A:
+                    a_record_matches.append(item.address)
 
-    ################################################################################
-    ### Check if we can curl websites over https
-    test_domains = list(check_url_dict.keys())
-    len_test_domains = len(test_domains)
+        if len(a_record_matches) != 0:
+            a_record_str = "OK - " + ", ".join(a_record_matches)
+        else:
+            a_record_str = " Fail - Lookup returned no results"
 
-    domain_results = curl_websites(url_dict=test_domains, timeout=2)
+        return a_record_str
 
-    print_with_dns_header(
-        results_dict=domain_results,
-        header=f"Curl website domain (HTTPS) fail rate =",
-        len_test_domains=len_test_domains,
-    )
+    def check_dns_servers(self):
+        """
+        Try to resolve sites by checking each dns servers individually.
+        """
 
-    ##################
-    ### Find network setup details
-    # 1. find my public ip address
-    #   * curl https://ipinfo.io/ip
-    # 2. find local connection details
-    #   * interface-name
-    #   * dhcp details (if relevant)
-    #   * gateway ip
-    #   * nameservers
-    # 3. test route to gateway
-    # 4. check if dns servers are working
-    ################################################################################
-    ### Check DNS servers
-    print("\nNow testing DNS servers..")
-    dns_servers = [
-        value for key, value in active_nmcli_dict.items() if "IP4.DNS" in key
-    ]
+        dns_results_dict = {}
+        for mydns in self.dns_servers:
+            dns_results_dict[mydns] = []
+            for site in self.test_domains:
+                ip_arecords = DNSServers.query_dns_via_udp(
+                    nameserver=mydns, mydomain=site
+                )
 
-    ### Add google dns server to list if not already present
-    if "8.8.8.8" not in dns_servers:
-        dns_servers.append("8.8.8.8")
+                dns_results_dict[mydns].append([site, ip_arecords])
+        return dns_results_dict
 
-    print("\nChecking DNS servers...")
+    def dns_check_main(self):
+        """
+        Main routine to check dns servers bt:
+            1. domain name
+            2. IP address
+        Assumes that google dns server 8.8.8.8 is highly available
+        """
 
-    dns_results_dict = check_dns_servers(
-        dns_servers=dns_servers, site_list=test_domains
-    )
+        ################################################################################
+        ### Check if we can curl websites over https
 
-    for dns_name, list_of_2nelem_lists in dns_results_dict.items():
-        dns_dict = list_of_2nelem_lists_2dict(list_of_2nelem_lists=list_of_2nelem_lists)
+        domain_results = curl_websites(url_dict=self.test_domains, timeout=2)
 
-        print_with_dns_header(
-            results_dict=dns_dict,
-            header=f"NameServer {dns_name} UDP Lookup fail rate =",
-            len_test_domains=len_test_domains,
+        fail_perc = self.print_with_dns_header(
+            results_dict=domain_results,
+            header=f"Curl website domain (HTTPS) fail rate =",
         )
+
+        if fail_perc == 100:
+            fmt_bold_red(mystr="Error: cannot curl any websites over HTTPS")
+        elif 50 < fail_perc < 100:
+            fmt_bold_yellow(
+                mystr="Warning: Cannot curl the majority of test sites over HTTPS."
+            )
+        else:
+            fmt_bold_yellow(
+                mystr="Warning: A few test sites could not be curled over HTTPS."
+            )
+        ##################
+        ### Find network setup details
+        # 1. find my public ip address
+        #   * curl https://ipinfo.io/ip
+        # 2. find local connection details
+        #   * interface-name
+        #   * dhcp details (if relevant)
+        #   * gateway ip
+        #   * nameservers
+        # 3. test route to gateway
+        # 4. check if dns servers are working
+        ################################################################################
+        ### Check DNS servers
+        print("\nNow testing DNS servers..")
+
+        self.find_name_servers()
+
+        dns_results_dict = self.check_dns_servers()
+
+        dns_fail_perc_dict = {}
+        for nameserver, list_of_2nelem_lists in dns_results_dict.items():
+            dns_dict = list_of_2nelem_lists_2dict(
+                list_of_2nelem_lists=list_of_2nelem_lists
+            )
+
+            fail_perc = self.print_with_dns_header(
+                results_dict=dns_dict,
+                header=f"NameServer {nameserver} UDP Lookup fail rate =",
+            )
+
+            dns_fail_perc_dict[nameserver] = fail_perc
+
+        google_ns_perc = dns_fail_perc_dict.pop("8.8.8.8")
+        for nameserver, fail_perc in dns_fail_perc_dict.items():
+            if fail_perc > 51:
+                fmt_bold_red(
+                    mystr=(
+                        f"Nameserver {nameserver} is having trouble resolving domains.."
+                        + f"\nIt failed to resolve {fail_perc}% of test sites vs. Google's nameserver (8.8.8.8) wich failed {google_ns_perc}% "
+                    )
+                )
+
+                if self.added_google_ns:
+                    fmt_bold_red(
+                        mystr="Consider adding google nameservers 8.8.8.8 & 8.8.4.4 to your DNS records"
+                    )
