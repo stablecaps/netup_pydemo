@@ -5,6 +5,7 @@ from components.helpers import (
     whatis_publicip,
     run_cmd_with_output,
     list_of_2nelem_lists_2dict,
+    substr_dict_key_search,
     process_subp_output,
 )
 from components.printers import (
@@ -114,6 +115,17 @@ def check_connx_main():
         sys.exit(1)
 
     fmt_bold_yellow(mystr=f"Default gateway is {default_gateway}")
+
+    priv_ip_addresses = substr_dict_key_search(
+        in_dict=active_nmcli_dict, search_term="IP4.ADDRESS"
+    )
+
+    if len(priv_ip_addresses) > 0:
+        pip_str = ""
+        for priv_ip in priv_ip_addresses:
+            pip_str += f"\tPRIVATE IP: {priv_ip}\n"
+
+        fmt_bold_yellow(mystr=f"Detected private Ip Addresses:\n{pip_str}")
 
     return active_nmcli_dict
 

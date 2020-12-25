@@ -27,7 +27,7 @@ def run_and_process_traceroute():
 
     traceroute_comm = "traceroute -q 3  8.8.8.8"
 
-    print("Running Traceroute..")
+    print("\nRunning Traceroute..")
     trace = run_cmd_with_output(comm_str=traceroute_comm)
 
     if not trace:

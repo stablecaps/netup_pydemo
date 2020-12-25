@@ -92,7 +92,7 @@ class NetupLauncher:
     def all():
         """Launch all routines to detect internet connectivity issues"""
 
-        print("\nLaunch all routines\n")
+        print("\nLaunching all routines\n")
         #################################################################
         ### 1. Simple ping-like connectivity test for a connection
         # TODO: this can be set to use port 8080 to delibrately fail for testing purposes

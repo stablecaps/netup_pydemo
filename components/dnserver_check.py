@@ -5,6 +5,7 @@ import dns.rdatatype
 from components.helpers import (
     curl_websites,
     list_of_2nelem_lists_2dict,
+    substr_dict_key_search,
 )
 from components.printers import print_dict_results, fmt_bold_yellow, fmt_bold_red
 
@@ -50,20 +51,30 @@ class DNSServers:
         return fail_percent
 
     def find_name_servers(self):
-        dns_servers = [
-            value for key, value in self.active_nmcli_dict.items() if "IP4.DNS" in key
-        ]
+        """
+        Creates a list of dns servers used by the system.
+        Reference google DNS nameserver (8.8.8.8) is added to compare against
+        already configured nameservers.
+        """
 
-        self.added_google_ns = False
+        dns_servers = substr_dict_key_search(
+            in_dict=self.active_nmcli_dict, search_term="IP4.DNS"
+        )
+
+        added_google_ns = False
         ### Add google dns server to list if not already present
         if "8.8.8.8" not in dns_servers:
-            self.added_google_ns = True
+            added_google_ns = True
             dns_servers.append("8.8.8.8")
 
-        self.dns_servers = dns_servers
+        return (dns_servers, added_google_ns)
 
     @staticmethod
     def query_dns_via_udp(nameserver, mydomain):
+        """
+        Returns a string of ip addresses returned by querying the specified
+        nameserver of UDP (port 53).
+        """
 
         where = nameserver
 
@@ -94,13 +105,13 @@ class DNSServers:
 
         return a_record_str
 
-    def check_dns_servers(self):
+    def check_dns_servers(self, dns_servers):
         """
         Try to resolve sites by checking each dns servers individually.
         """
 
         dns_results_dict = {}
-        for mydns in self.dns_servers:
+        for mydns in dns_servers:
             dns_results_dict[mydns] = []
             for site in self.test_domains:
                 ip_arecords = DNSServers.query_dns_via_udp(
@@ -125,7 +136,7 @@ class DNSServers:
 
         fail_perc = self.print_with_dns_header(
             results_dict=domain_results,
-            header=f"Curl website domain (HTTPS) fail rate =",
+            header="Curl website domain (HTTPS) fail rate =",
         )
 
         if fail_perc == 100:
@@ -138,24 +149,14 @@ class DNSServers:
             fmt_bold_yellow(
                 mystr="Warning: A few test sites could not be curled over HTTPS."
             )
-        ##################
-        ### Find network setup details
-        # 1. find my public ip address
-        #   * curl https://ipinfo.io/ip
-        # 2. find local connection details
-        #   * interface-name
-        #   * dhcp details (if relevant)
-        #   * gateway ip
-        #   * nameservers
-        # 3. test route to gateway
-        # 4. check if dns servers are working
+
         ################################################################################
         ### Check DNS servers
         print("\nNow testing DNS servers..")
 
-        self.find_name_servers()
+        dns_servers, added_google_ns = self.find_name_servers()
 
-        dns_results_dict = self.check_dns_servers()
+        dns_results_dict = self.check_dns_servers(dns_servers=dns_servers)
 
         dns_fail_perc_dict = {}
         for nameserver, list_of_2nelem_lists in dns_results_dict.items():
@@ -170,17 +171,36 @@ class DNSServers:
 
             dns_fail_perc_dict[nameserver] = fail_perc
 
+        all_perc_fails = {
+            True if perc > 80 else False for perc in list(dns_fail_perc_dict.values())
+        }
+
+        ################################################################################
+        ### Print DNS messages
         google_ns_perc = dns_fail_perc_dict.pop("8.8.8.8")
         for nameserver, fail_perc in dns_fail_perc_dict.items():
-            if fail_perc > 51:
-                fmt_bold_red(
-                    mystr=(
-                        f"Nameserver {nameserver} is having trouble resolving domains.."
-                        + f"\nIt failed to resolve {fail_perc}% of test sites vs. Google's nameserver (8.8.8.8) wich failed {google_ns_perc}% "
-                    )
+            msg = None
+            if fail_perc > 41:
+
+                msg = (
+                    f"Nameserver {nameserver} is having trouble resolving "
+                    + f"{fail_perc}% of test domains.."
                 )
 
-                if self.added_google_ns:
-                    fmt_bold_red(
-                        mystr="Consider adding google nameservers 8.8.8.8 & 8.8.4.4 to your DNS records"
+                if added_google_ns and google_ns_perc < 40:
+                    msg += (
+                        f"\nHowever, Google's nameserver (8.8.8.8) failed {google_ns_perc}% "
+                        + "\nConsider adding google nameservers 8.8.8.8 & 8.8.4.4 "
+                        + "to your internet connection settings."
                     )
+
+            if msg is not None:
+                fmt_bold_red(mystr=msg)
+
+        if len(all_perc_fails) == 1 and all_perc_fails:
+            fmt_bold_red(
+                mystr=(
+                    "All configured DNS servers are experiencing trouble "
+                    + "resolving addresses over UDP"
+                )
+            )

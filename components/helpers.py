@@ -117,6 +117,16 @@ def process_subp_output(cmd_output, delimiter="\t", exclude_list=["", " "]):
     return holder
 
 
+def substr_dict_key_search(in_dict, search_term):
+    """
+    Returns a list of values from a dictionary depending on what keys are matched
+    by the substring specified by search_term.
+    """
+
+    match_list = [value for key, value in in_dict.items() if search_term in key]
+    return match_list
+
+
 def list_of_2nelem_lists_2dict(list_of_2nelem_lists):
     """
     Takes in a list_of_2nelem_lists such as [[key1, val1], [key2, val2], [key3, val3]]
