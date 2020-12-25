@@ -4,7 +4,7 @@ import sys
 from components.helpers import (
     whatis_publicip,
     run_cmd_with_output,
-    gen_dict_from_list_of_2nelem_lists,
+    list_of_2nelem_lists_2dict,
     process_subp_output,
 )
 from components.printers import (
@@ -101,7 +101,7 @@ def check_connx_main():
         print_all_ifaces=False,
     )
 
-    active_nmcli_dict = gen_dict_from_list_of_2nelem_lists(
+    active_nmcli_dict = list_of_2nelem_lists_2dict(
         list_of_2nelem_lists=nmcli_all_dict[default_iface]
     )
 

@@ -4,12 +4,11 @@ import shlex
 import subprocess
 import requests
 from requests.exceptions import HTTPError
-import dns.resolver
 
 check_url_dict = {
-    "google.com": "216.58.204.228",
+    "www.google.com": "216.58.204.228",
     "simulate-error-tuydutyi.com": "8.8.8.8",  # 8.8.8.8 ip address simulates working dns
-    "duckduckgo.com": "52.142.124.215",
+    "www.duckduckgo.com": "52.142.124.215",
     "www.bing.com": "13.107.21.200",
     "www.bbc.co.uk": "212.58.237.252",
 }
@@ -118,7 +117,7 @@ def process_subp_output(cmd_output, delimiter="\t", exclude_list=["", " "]):
     return holder
 
 
-def gen_dict_from_list_of_2nelem_lists(list_of_2nelem_lists):
+def list_of_2nelem_lists_2dict(list_of_2nelem_lists):
     """
     Takes in a list_of_2nelem_lists such as [[key1, val1], [key2, val2], [key3, val3]]
     and returns a dictionary.
@@ -133,7 +132,7 @@ def gen_dict_from_list_of_2nelem_lists(list_of_2nelem_lists):
     return mydict
 
 
-def gen_dict_from_list_of_nelem_lists(list_of_nelem_lists, keyn=1, valn=-1):
+def list_of_nelem_lists_2dict(list_of_nelem_lists, keyn=1, valn=-1):
     """
     Takes in a list_of_nelem_lists such as [[val1, val2, val3, ..., ...], [val1, val2, val3, ..., ...], [val1, val2, val3, ..., ...]]
     and returns a dictionary.
@@ -148,32 +147,6 @@ def gen_dict_from_list_of_nelem_lists(list_of_nelem_lists, keyn=1, valn=-1):
         mydict[key] = value
 
     return mydict
-
-
-def check_dns_servers(dns_servers, site_list):
-    """
-    Try to resolve sites by checking each dns servers individually.
-    """
-
-    dns_results_dict = {}
-    for mydns in dns_servers:
-        dns_results_dict[mydns] = []
-
-        myresolver = dns.resolver.Resolver()
-        myresolver.nameservers = [mydns]
-
-        for site in site_list:
-            try:
-                result = myresolver.resolve(site)
-                for ipval in result:
-                    #'try:
-                    ipaddr = ipval.to_text()
-                    #'print("IP", ipaddr)
-            except Exception as err:
-                ipaddr = str(err)
-
-            dns_results_dict[mydns].append([site, ipaddr])
-    return dns_results_dict
 
 
 # https://www.certdepot.net/rhel7-get-started-nmcli/

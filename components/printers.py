@@ -2,7 +2,7 @@
 
 import sys
 from blessings import Terminal
-from components.helpers import gen_dict_from_list_of_2nelem_lists
+from components.helpers import list_of_2nelem_lists_2dict
 
 
 def get_longest_str_in_dict(mydict, mode="keys"):
@@ -147,7 +147,7 @@ def nmcli_printer(nmcli_all_dict, default_iface, print_all_ifaces=False):
         iface_name_li = list(nmcli_all_dict.keys())
 
     for iface in iface_name_li:
-        iface_dict = gen_dict_from_list_of_2nelem_lists(
+        iface_dict = list_of_2nelem_lists_2dict(
             list_of_2nelem_lists=nmcli_all_dict[iface]
         )
 
@@ -155,21 +155,4 @@ def nmcli_printer(nmcli_all_dict, default_iface, print_all_ifaces=False):
             results_dict=iface_dict,
             header=f"Iface info for: {iface}",
             fmt_func_str="fmt_bold_col1",
-        )
-
-
-def dns_printer(dns_results_dict):
-    """
-    Prints out colour coded results from dictionary containing dns server data.
-    """
-
-    for dns_name, list_of_2nelem_lists in dns_results_dict.items():
-        dns_dict = gen_dict_from_list_of_2nelem_lists(
-            list_of_2nelem_lists=list_of_2nelem_lists
-        )
-
-        print_dict_results(
-            results_dict=dns_dict,
-            header=f"NameServer {dns_name} Lookup results:",
-            fmt_func_str="fmt_ok_error_dns",
         )

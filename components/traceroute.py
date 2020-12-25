@@ -5,7 +5,7 @@ import re
 from components.helpers import (
     run_cmd_with_output,
     process_subp_output,
-    gen_dict_from_list_of_nelem_lists,
+    list_of_nelem_lists_2dict,
 )
 from components.printers import (
     fmt_bold_yellow,
@@ -118,7 +118,7 @@ def eval_high_hop_latency_msg(large_latency_str, large_latency_idx):
     """
 
     if len(large_latency_str) > 0:
-        largehop_dict = gen_dict_from_list_of_nelem_lists(
+        largehop_dict = list_of_nelem_lists_2dict(
             list_of_nelem_lists=large_latency_str, keyn=2, valn=-1
         )
 
@@ -195,7 +195,7 @@ def traceroute_main():
 
     fmted_holder_str = gen_fmted_str_holder(fmted_holder=fmted_holder)
 
-    trace_dict = gen_dict_from_list_of_nelem_lists(
+    trace_dict = list_of_nelem_lists_2dict(
         list_of_nelem_lists=fmted_holder_str, keyn=2, valn=-1
     )
 
