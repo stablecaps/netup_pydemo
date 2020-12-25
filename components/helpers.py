@@ -68,12 +68,12 @@ def run_cmd_with_errorcode(comm_str):
     split_comm_clean = list(filter(lambda a: a != "", split_comm))
 
     try:
-        sp_resp = subprocess.check_output(split_comm_clean)
+        subprocess.check_output(split_comm_clean)
     except subprocess.CalledProcessError as err:
         print(f"error code  {err.returncode}")
         return False
 
-    return sp_resp
+    return True
 
 
 def run_cmd_with_output(comm_str):

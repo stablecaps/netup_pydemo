@@ -49,8 +49,27 @@ python netup_luncher.py all
 
 ```
 
-#### simulate dns fail
+### Simulating Failure:
+
+#### Trigger start of tes routine:
+
+```
+## Change line 99 to:
+tcp_ping_commm = "nc -vz -w 5 www.google.com 8080"
+```
+
+#### Check connectivity
+Disconnect network connection
+
+#### Test local issue
+Block TCP/UDP on router so at least one hop is made
+
+#### DNS fail
 https://serverfault.com/questions/776049/how-to-simulate-dns-server-response-timeout
 What you need is a "black hole server". You can use blackhole.webpagetest.org (72.66.115.13) which will silently drop all requests.
 
-Why I suggest this over the other answers, is because the aforementioned server has been established for this sole purpose.
+
+## Things left to do
+Quite a fun test, but I would have liked a bit more time to thoroughly test the script so more definitive exit points (with status codes) could be made. This would involve testing connectivity via various protocols and figuring out how to implement that for testing.
+
+I would also have liked to write more tests to check the functionality of the program given enough time.

@@ -96,7 +96,7 @@ class NetupLauncher:
         #################################################################
         ### 1. Simple ping-like connectivity test for a connection
         # TODO: this can be set to use port 8080 to delibrately fail for testing purposes
-        tcp_ping_commm = "nc -vz -w 5 www.google.com 8080"
+        tcp_ping_commm = "nc -vz -w 5 www.google.com 80"
         tcp_ping = run_cmd_with_errorcode(comm_str=tcp_ping_commm)
 
         if not tcp_ping:
