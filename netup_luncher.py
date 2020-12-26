@@ -39,7 +39,7 @@ class NetupLauncher:
 
         # parse_args defaults to [1:] for args, but you need to
         # exclude the rest of the args too, or validation will fail
-        args = parser.parse_args(sys.argv[1:4])
+        args = parser.parse_args(sys.argv[1:2])
         if not hasattr(NetupLauncher, args.command):
             print("Unrecognized command")
             parser.print_help()
@@ -47,6 +47,18 @@ class NetupLauncher:
 
         # use dispatch pattern to invoke method with same name
         getattr(self, args.command)()
+
+    @staticmethod
+    def _str2bool(putative_cli_bool):
+        if isinstance(putative_cli_bool, bool):
+            return putative_cli_bool
+
+        if putative_cli_bool.lower() in ("yes", "true", "t", "y", "1"):
+            return True
+        elif putative_cli_bool.lower() in ("no", "false", "f", "n", "0"):
+            return False
+        else:
+            raise argparse.ArgumentTypeError("Boolean value expected.")
 
     @staticmethod
     def connx():
@@ -92,12 +104,31 @@ class NetupLauncher:
     def all():
         """Launch all routines to detect internet connectivity issues"""
 
+        parser = argparse.ArgumentParser(description="Run all diagnostics")
+        parser.add_argument(
+            "-f",
+            "--force",
+            default=False,
+            type=bool,
+            help="Switch to force error and run all tests.",
+        )
+
+        args = parser.parse_args(sys.argv[2:])
+
+        NetupLauncher._str2bool(putative_cli_bool=args.force)
+
         print("\nLaunching all routines\n")
+
         #################################################################
         ### 1. Simple ping-like connectivity test for a connection
         # TODO: this can be set to use port 8080 to delibrately fail for testing purposes
+
         tcp_ping_commm = "nc -vz -w 5 www.google.com 80"
         tcp_ping = run_cmd_with_errorcode(comm_str=tcp_ping_commm)
+
+        ### Switch to force error
+        if args.force:
+            tcp_ping = False
 
         if not tcp_ping:
             fmt_bold_red(mystr="TCP Ping failed. Now checking connection settings..")

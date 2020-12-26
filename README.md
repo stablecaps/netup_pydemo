@@ -47,15 +47,22 @@ python netup_luncher.py traceroute
 # Launch all routines
 python netup_luncher.py all
 
+# Launch all routines and force initial error so all routines are run
+python netup_luncher.py all --force true
+
 ```
 
 ### Simulating Failure:
 
-#### Trigger start of tes routine:
+#### Trigger start of test routine:
 
 ```
-## Change line 99 to:
-tcp_ping_commm = "nc -vz -w 5 www.google.com 8080"
+
+## ~Change line 99 to:~
+~tcp_ping_commm = "nc -vz -w 5 www.google.com 8080"~
+
+now use:
+python netup_luncher.py all --force true
 ```
 
 #### Check connectivity
