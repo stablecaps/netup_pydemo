@@ -7,11 +7,7 @@ from components.helpers import (
     process_subp_output,
     list_of_nelem_lists_2dict,
 )
-from components.printers import (
-    fmt_bold_yellow,
-    fmt_bold_red,
-    print_dict_results,
-)
+from components.printers import ColourPrinter
 
 LARGE_THRESHOLD = 150
 
@@ -25,14 +21,13 @@ def run_and_process_traceroute():
         4. Retrns a flat list with traceroute with averaged timings in ms
     """
 
-    traceroute_comm = "traceroute -q 3  8.8.8.8"
-
     print("\nRunning Traceroute..")
+
+    traceroute_comm = "traceroute -q 3  8.8.8.8"
     trace = run_cmd_with_output(comm_str=traceroute_comm)
 
     if not trace:
-        fmt_bold_red(mystr="Check your network cable/connection..")
-        sys.exit(1)
+        return (None, None, None)
 
     trace_fmt = process_subp_output(
         cmd_output=trace, delimiter=" ", exclude_list=["", " ", "*", "ms"]
@@ -43,25 +38,25 @@ def run_and_process_traceroute():
     fmted_holder = []
     total_times_ms = []
     for sublist in trace_fmt:
-
         if sublist[0] == "traceroute":
             header = " ".join(sublist)
         else:
-            hop = sublist[0]
-            name = sublist[1]
-            ip_addr = sublist[2]
-            fmt_row = [hop, name, ip_addr]
+            if len(sublist) > 1:
+                hop = sublist[0]
+                name = sublist[1]
+                ip_addr = sublist[2]
+                fmt_row = [hop, name, ip_addr]
 
-            calc_list = [
-                float(elem) for elem in sublist[3:] if not ip_addr_re.match(elem)
-            ]
+                calc_list = [
+                    float(elem) for elem in sublist[3:] if not ip_addr_re.match(elem)
+                ]
 
-            len_calc = len(calc_list)
-            avg_time = round(sum(calc_list) / len_calc, 3)
-            fmt_row.append(avg_time)
-            fmted_holder.append(fmt_row)
+                len_calc = len(calc_list)
+                avg_time = round(sum(calc_list) / len_calc, 3)
+                fmt_row.append(avg_time)
+                fmted_holder.append(fmt_row)
 
-            total_times_ms.append(avg_time)
+                total_times_ms.append(avg_time)
 
     return (fmted_holder, total_times_ms, header)
 
@@ -117,6 +112,8 @@ def eval_high_hop_latency_msg(large_latency_str, large_latency_idx):
     Prints messages to screen identifying hops with high latency and potential causes.
     """
 
+    prt = ColourPrinter()
+
     if len(large_latency_str) > 0:
         largehop_dict = list_of_nelem_lists_2dict(
             list_of_nelem_lists=large_latency_str, keyn=2, valn=-1
@@ -145,6 +142,8 @@ def eval_final_msg(final_hop, len_fmted_holder_str):
     potential causes. (Unfinished)
     """
 
+    prt = ColourPrinter()
+
     # TODO: Evaluate whether final time is *** or a number
     name_hit = True
     if final_hop == "dns.google":
@@ -167,9 +166,9 @@ def eval_final_msg(final_hop, len_fmted_holder_str):
 
     ###
     if not name_hit:
-        fmt_bold_red(mystr=hit_str)
+        prt.fmt_bold_red(mystr=hit_str)
     else:
-        fmt_bold_yellow(mystr="Successfully connected to dns.google (8.8.8.8)")
+        prt.fmt_bold_yellow(mystr="Successfully connected to dns.google (8.8.8.8)")
 
 
 def traceroute_main():
@@ -186,8 +185,14 @@ def traceroute_main():
         4. Timeouts at the very end of the report: Possible connection problem at the target. This will affect the connection.
     """
 
+    prt = ColourPrinter()
+
     ### Run traceroute
     fmted_holder, total_times_ms, header = run_and_process_traceroute()
+
+    if fmted_holder is None:
+        prt.fmt_bold_red(mystr="Check your network cable/connection..")
+        sys.exit(1)
 
     large_latency_idx, large_latency_str = find_high_latency_hops(
         total_times_ms=total_times_ms, fmted_holder=fmted_holder
@@ -201,14 +206,14 @@ def traceroute_main():
 
     #########################################################
     ### Print traceroute results
-    print_dict_results(
+    prt.print_dict_results(
         results_dict=trace_dict,
         header=header,
         fmt_func_str="fmt_bold_col1",
     )
 
     fmt_total_time = round(sum(total_times_ms), 3)
-    fmt_bold_yellow(mystr=f"\n Total time: {fmt_total_time} ms")
+    prt.fmt_bold_yellow(mystr=f"\n Total time: {fmt_total_time} ms")
 
     #########################################################
     ## Print hops with large latency

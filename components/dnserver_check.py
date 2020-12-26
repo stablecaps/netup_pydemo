@@ -7,7 +7,7 @@ from components.helpers import (
     list_of_2nelem_lists_2dict,
     substr_dict_key_search,
 )
-from components.printers import print_dict_results, fmt_bold_yellow, fmt_bold_red
+from components.printers import ColourPrinter
 
 
 class DNSServers:
@@ -18,6 +18,8 @@ class DNSServers:
         self.check_url_dict = check_url_dict
         self.test_domains = list(self.check_url_dict.keys())
         self.num_domains = len(self.test_domains)
+
+        self.prt = ColourPrinter()
 
     def calc_dns_fail_percent(self, results_dict):
         """
@@ -42,7 +44,7 @@ class DNSServers:
         """Print curl result with percentage fail number in header."""
 
         fail_percent = self.calc_dns_fail_percent(results_dict=results_dict)
-        print_dict_results(
+        self.prt.print_dict_results(
             results_dict=results_dict,
             header=f"{header} {fail_percent}%",
             fmt_func_str="fmt_ok_error",
@@ -132,7 +134,7 @@ class DNSServers:
         ################################################################################
         ### Check if we can curl websites over https
 
-        domain_results = curl_websites(url_dict=self.test_domains, timeout=2)
+        domain_results = curl_websites(url_dict=self.test_domains, timeout=10)
 
         fail_perc = self.print_with_dns_header(
             results_dict=domain_results,
@@ -140,13 +142,13 @@ class DNSServers:
         )
 
         if fail_perc == 100:
-            fmt_bold_red(mystr="Error: cannot curl any websites over HTTPS")
+            self.prt.fmt_bold_red(mystr="Error: cannot curl any websites over HTTPS")
         elif 50 < fail_perc < 100:
-            fmt_bold_yellow(
+            self.prt.fmt_bold_yellow(
                 mystr="Warning: Cannot curl the majority of test sites over HTTPS."
             )
         else:
-            fmt_bold_yellow(
+            self.prt.fmt_bold_yellow(
                 mystr="Warning: A few test sites could not be curled over HTTPS."
             )
 
@@ -195,10 +197,10 @@ class DNSServers:
                     )
 
             if msg is not None:
-                fmt_bold_red(mystr=msg)
+                self.prt.fmt_bold_red(mystr=msg)
 
         if len(all_perc_fails) == 1 and all_perc_fails:
-            fmt_bold_red(
+            prt.self.prt.fmt_bold_red(
                 mystr=(
                     "All configured DNS servers are experiencing trouble "
                     + "resolving addresses over UDP"

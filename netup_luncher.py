@@ -3,9 +3,11 @@
 import sys
 import argparse
 from components.helpers import run_cmd_with_errorcode, check_url_dict
-from components.printers import fmt_bold_red
-from components.connectivity_checker import check_connx_main, check_publicip_main
+from components.printers import ColourPrinter
+from components.connectivity_checker import check_connx_main, run_publicip_routine
+
 from components.dnserver_check import DNSServers
+
 from components.traceroute import traceroute_main
 
 # Strategy:
@@ -28,6 +30,9 @@ class NetupLauncher:
     """
 
     def __init__(self):
+
+        self.prt = ColourPrinter()
+
         help_banner = "Available command options: <all|connx|publicip|dns|traceroute>"
 
         parser = argparse.ArgumentParser(
@@ -73,7 +78,7 @@ class NetupLauncher:
         """Launch subroutine to check publicip"""
 
         print("\nLaunching publicip subroutine...\n")
-        check_publicip_main()
+        run_publicip_routine()
 
         print("\nExiting.")
 
@@ -100,8 +105,7 @@ class NetupLauncher:
 
         print("\nExiting.")
 
-    @staticmethod
-    def all():
+    def all(self):
         """Launch all routines to detect internet connectivity issues"""
 
         parser = argparse.ArgumentParser(description="Run all diagnostics")
@@ -131,21 +135,19 @@ class NetupLauncher:
             tcp_ping = False
 
         if not tcp_ping:
-            fmt_bold_red(mystr="TCP Ping failed. Now checking connection settings..")
+            self.prt.fmt_bold_red(
+                mystr="TCP Ping failed. Now checking connection settings.."
+            )
             #################################################################
             ### 2. Check basic connectivity to internet
             active_nmcli_dict = check_connx_main()
 
             ################
-            ## 3. Check whether public IP is assigned
-            check_publicip_main()
-
-            ################
-            ## 4. Check traceroute
+            ## 3. Check traceroute
             traceroute_main()
 
             ################
-            ## 5. Check DNS servers
+            ## 4. Check DNS servers
             dns_test = DNSServers(
                 active_nmcli_dict=active_nmcli_dict, check_url_dict=check_url_dict
             )

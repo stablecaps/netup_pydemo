@@ -14,7 +14,7 @@ check_url_dict = {
 }
 
 
-def get_https_request_status(myurl):
+def get_https_request_status(myurl, timeout=10):
     """
     Perform simple get request to a website over HTTPS.
     """
@@ -43,7 +43,9 @@ def curl_websites(url_dict, timeout=10):
 
     results_dict = {}
     for myurl in url_dict:
-        result = get_https_request_status(myurl=get_https_request_status(myurl))
+        result = get_https_request_status(
+            myurl=get_https_request_status(myurl), timeout=timeout
+        )
         results_dict[myurl] = result
 
     return results_dict
