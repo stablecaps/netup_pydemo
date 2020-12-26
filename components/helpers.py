@@ -3,7 +3,7 @@
 import shlex
 import subprocess
 import requests
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, Timeout
 
 check_url_dict = {
     "www.google.com": "216.58.204.228",
@@ -14,6 +14,27 @@ check_url_dict = {
 }
 
 
+def get_https_request_status(myurl):
+    """
+    Perform simple get request to a website over HTTPS.
+    """
+
+    try:
+        resp = requests.get(f"https://{myurl}", timeout=timeout)
+        status_code = resp.status_code
+        result = f"OK - {str(status_code)}"
+    except HTTPError as err:
+        result = f"OK - {str(err)}"
+    except requests.ConnectTimeout as err:
+        result = f"Timeout - {str(err)}"
+    except requests.ConnectionError as err:
+        result = f"Connection Error - {str(err)}"
+    except Exception as err:
+        result = f"Other error occurred - str({err})"
+
+    return result
+
+
 def curl_websites(url_dict, timeout=10):
     """
     Use requests to get http response codes or appopriate error from a list of websites.
@@ -22,20 +43,7 @@ def curl_websites(url_dict, timeout=10):
 
     results_dict = {}
     for myurl in url_dict:
-        try:
-            resp = requests.get(f"https://{myurl}", timeout=timeout)
-            status_code = resp.status_code
-            result = f"OK - {str(status_code)}"
-        except HTTPError as err:
-            print(f"HTTP error occurred: {err}")
-            result = f"OK - {str(err)}"
-        except requests.ConnectTimeout as err:
-            result = f"Timeout - {str(err)}"
-        except requests.ConnectionError as err:
-            result = f"Connection Error - {str(err)}"
-        except Exception as err:
-            print(f"Other error occurred - {err}")
-
+        result = get_https_request_status(myurl=get_https_request_status(myurl))
         results_dict[myurl] = result
 
     return results_dict
@@ -48,6 +56,9 @@ def whatis_publicip(ip_check_url="https://ipinfo.io/ip", timeout=10):
 
     try:
         resp = requests.get(ip_check_url, timeout=timeout)
+    except Timeout as err:
+        print(err)
+        return None
     except Exception as err:
         print(err)
         return None
@@ -55,11 +66,9 @@ def whatis_publicip(ip_check_url="https://ipinfo.io/ip", timeout=10):
     return resp.text
 
 
-def run_cmd_with_errorcode(comm_str):
+def shlex_convert_str_2list(comm_str):
     """
-    Run a subprocess command and print error code on failure.
-    Also returns output on success and
-    False on failure so that it can be handled downstream.
+    Convert a linux command into list format with shlex.
     """
 
     split_comm = shlex.split(comm_str, " ")
@@ -67,13 +76,7 @@ def run_cmd_with_errorcode(comm_str):
     # remove all instances of empty string
     split_comm_clean = list(filter(lambda a: a != "", split_comm))
 
-    try:
-        subprocess.check_output(split_comm_clean)
-    except subprocess.CalledProcessError as err:
-        print(f"error code  {err.returncode}")
-        return False
-
-    return True
+    return split_comm_clean
 
 
 def run_cmd_with_output(comm_str):
@@ -83,10 +86,8 @@ def run_cmd_with_output(comm_str):
     False on failure so that it can be handled downstream.
     """
 
-    split_comm = shlex.split(comm_str, " ")
+    split_comm_clean = shlex_convert_str_2list(comm_str=comm_str)
 
-    # remove all instances of empty string
-    split_comm_clean = list(filter(lambda a: a != "", split_comm))
     try:
         sp_resp = subprocess.check_output(split_comm_clean)
         return sp_resp
@@ -94,6 +95,24 @@ def run_cmd_with_output(comm_str):
         print("\n")
         print(err)
         return False
+
+
+def run_cmd_with_errorcode(comm_str):
+    """
+    Run a subprocess command and print error code on failure.
+    Also returns output on success and
+    False on failure so that it can be handled downstream.
+    """
+
+    split_comm_clean = shlex_convert_str_2list(comm_str=comm_str)
+
+    try:
+        subprocess.check_output(split_comm_clean)
+    except Exception as err:
+        print(f"error code  {err}")
+        return False
+
+    return True
 
 
 def process_subp_output(cmd_output, delimiter="\t", exclude_list=["", " "]):
@@ -112,7 +131,7 @@ def process_subp_output(cmd_output, delimiter="\t", exclude_list=["", " "]):
         filtered_line = [
             elem.strip() for elem in splitty_line if elem not in exclude_list
         ]
-        if len(filtered_line) > 1:
+        if len(filtered_line) > 0:
             holder.append(filtered_line)
     return holder
 
