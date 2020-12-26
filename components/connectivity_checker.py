@@ -127,6 +127,7 @@ def check_connx_main():
 
         fmt_bold_yellow(mystr=f"Detected private Ip Addresses:\n{pip_str}")
 
+    print("active_nmcli_dict", active_nmcli_dict)
     return active_nmcli_dict
 
 
