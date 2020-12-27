@@ -1,5 +1,6 @@
 appdirs==1.4.4
 astroid==2.4.2
+asttokens==2.0.4
 attrs==20.3.0
 black==20.8b1
 blessings==1.7
@@ -10,6 +11,7 @@ coverage==5.3.1
 decorator==4.4.2
 dnspython==2.0.0
 hypothesis==5.43.4
+icontract==2.4.1
 idna==2.10
 importlab==0.5.1
 iniconfig==1.1.1
@@ -32,6 +34,7 @@ pytype==2020.12.23
 PyYAML==5.3.1
 regex==2020.11.13
 requests==2.25.1
+requests-mock==1.8.0
 scapy==2.4.4
 six==1.15.0
 sortedcontainers==2.3.0
