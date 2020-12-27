@@ -154,7 +154,7 @@ def run_publicip_routine() -> None:
         prt.fmt_bold_red(mystr="Cannot retrieve your public IP address over HTTPS.")
     else:
         prt.fmt_bold_yellow(mystr=f"Your public IP (HTTPS) is {public_ip_https}")
-    ############################################################
+    #########################################################
     if not public_ip_dig:
         prt.fmt_bold_red(
             mystr=(
@@ -166,7 +166,7 @@ def run_publicip_routine() -> None:
         prt.fmt_bold_yellow(
             mystr=f"Your public IP via dig (UDP) is {public_ip_dig.decode()}"
         )
-    ############################################################
+    #########################################################
 
 
 def check_connx_main() -> Dict[str, str]:

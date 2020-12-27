@@ -54,7 +54,7 @@ def curl_websites(url_dict: List[str], timeout: int = 10) -> Dict[str, str]:
 
 def whatis_publicip(
     ip_check_url: str = "https://ipinfo.io/ip", timeout: int = 10
-) -> str:
+) -> Optional[str]:
     """
     Find users public IP address from a url service.
     """

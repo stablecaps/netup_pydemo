@@ -8,30 +8,41 @@ from components.helpers import (
     list_of_nelem_lists_2dict,
 )
 from components.printers import ColourPrinter
+from typing import Any, List, Tuple, Union
 
 LARGE_THRESHOLD = 150
+prt = ColourPrinter()
 
 
-def run_and_process_traceroute():
+def run_traceroute() -> List[List[str]]:
     """
-    Macro function that:
-        1. runs traceroute
-        2. Returns traceroute header (header)
-        3. Returns a list of list containing traceroute output data with averaged times (fmted_holder)
-        4. Retrns a flat list with traceroute with averaged timings in ms
+    Runs traceroute via subprocess.
     """
 
     print("\nRunning Traceroute..")
 
     traceroute_comm = "traceroute -q 3  8.8.8.8"
-    trace = run_cmd_with_output(comm_str=traceroute_comm)
 
-    if not trace:
-        return (None, None, None)
+    # TODO: sort out granularity of this error by processing traceroute exit codes properly
+    trace = run_cmd_with_output(comm_str=traceroute_comm)
+    prt.exit_with_bye_if_none(check_var=trace, cmd_run="traceroute -q 3  8.8.8.8")
 
     trace_fmt = process_subp_output(
         cmd_output=trace, delimiter=" ", exclude_list=["", " ", "*", "ms"]
     )
+
+    return trace_fmt
+
+
+def get_traceroute_data_structs(
+    trace_fmt: List[List[str]],
+) -> Tuple[List[List[Union[str, float]]], List[float], str]:
+    """
+    Macro function that:
+        1. Processes traceroute header (header) & main body
+        2. Returns a list of list containing traceroute output data with averaged times (fmted_holder)
+        3. Retrns a flat list with traceroute with averaged timings in ms
+    """
 
     ip_addr_re = re.compile(r"^\(?\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\)?$")
 
@@ -61,7 +72,9 @@ def run_and_process_traceroute():
     return (fmted_holder, total_times_ms, header)
 
 
-def find_high_latency_hops(total_times_ms, fmted_holder):
+def get_high_latency_hop_data(
+    total_times_ms: List[float], fmted_holder: List[List[Union[str, float]]]
+) -> Tuple[List[Any], List[Any]]:
     """
     Detects which averaged timings are > LARGE_THRESHOLD.
     Returns:
@@ -80,7 +93,9 @@ def find_high_latency_hops(total_times_ms, fmted_holder):
     return (large_latency_idx, large_latency_str)
 
 
-def gen_fmted_str_holder(fmted_holder):
+def gen_fmted_str_holder(
+    fmted_holder: List[List[Union[str, float]]]
+) -> List[List[str]]:
     """
     Converts float times in traceroute results (list of lists) into a string with units.
     """
@@ -107,12 +122,12 @@ def is_local_latency_high(large_latency_idx):
     return False
 
 
-def eval_high_hop_latency_msg(large_latency_str, large_latency_idx):
+def eval_high_hop_latency_msg(
+    large_latency_str: List[Any], large_latency_idx: List[Any]
+) -> None:
     """
     Prints messages to screen identifying hops with high latency and potential causes.
     """
-
-    prt = ColourPrinter()
 
     if len(large_latency_str) > 0:
         largehop_dict = list_of_nelem_lists_2dict(
@@ -136,13 +151,11 @@ def eval_high_hop_latency_msg(large_latency_str, large_latency_idx):
             )
 
 
-def eval_final_msg(final_hop, len_fmted_holder_str):
+def eval_final_msg(final_hop: str, len_fmted_holder_str: int) -> None:
     """
     Prints messages to screen identifying  whether the target destination was hit or not with
     potential causes. (Unfinished)
     """
-
-    prt = ColourPrinter()
 
     # TODO: Evaluate whether final time is *** or a number
     name_hit = True
@@ -151,12 +164,11 @@ def eval_final_msg(final_hop, len_fmted_holder_str):
     elif final_hop == "8.8.8.8":
         # TODO: establish whether traceroute falls back to ip address if it fails on name (my router is flaky)
         hit_str = "Managed to hit 8.8.8.8 IP Add"  # but not dns.google DNS name"
-        # name_hit = False
     else:
         hit_str = "Failed to hit dns.google name or 8.8.8.8 IP."
         name_hit = False
 
-    ###
+    #########################################################
     if len_fmted_holder_str < 2:
         hit_str += "\nIssues reaching target are potentially in your local network or with your ISP"
     else:
@@ -164,14 +176,14 @@ def eval_final_msg(final_hop, len_fmted_holder_str):
             "\nIssues reaching target are potentially *outside* your local network"
         )
 
-    ###
+    #########################################################
     if not name_hit:
         prt.fmt_bold_red(mystr=hit_str)
     else:
         prt.fmt_bold_yellow(mystr="Successfully connected to dns.google (8.8.8.8)")
 
 
-def traceroute_main():
+def traceroute_main() -> None:
     """
     Main routine to launch traceroute analysis
 
@@ -185,16 +197,20 @@ def traceroute_main():
         4. Timeouts at the very end of the report: Possible connection problem at the target. This will affect the connection.
     """
 
-    prt = ColourPrinter()
-
     ### Run traceroute
-    fmted_holder, total_times_ms, header = run_and_process_traceroute()
+    trace_fmt = run_traceroute()
+    fmted_holder, total_times_ms, header = get_traceroute_data_structs(
+        trace_fmt=trace_fmt
+    )
 
-    if fmted_holder is None:
-        prt.fmt_bold_red(mystr="Check your network cable/connection..")
-        sys.exit(1)
+    # TODO: sort out granularity of this error by processing traceroute exit codes properly
+    prt.exit_with_bye_if_none(
+        check_var=fmted_holder, cust_msg="Check your network cable/connection.."
+    )
 
-    large_latency_idx, large_latency_str = find_high_latency_hops(
+    #########################################################
+    ### Process traceroute
+    large_latency_idx, large_latency_str = get_high_latency_hop_data(
         total_times_ms=total_times_ms, fmted_holder=fmted_holder
     )
 
@@ -226,40 +242,3 @@ def traceroute_main():
     final_hop = fmted_holder_str[-1][1]
     len_fmted_holder_str = len(fmted_holder_str)
     eval_final_msg(final_hop=final_hop, len_fmted_holder_str=len_fmted_holder_str)
-
-
-# normal
-# total_times_ms = [3.027, 20.703, 24.596, 22.152, 27.031, 27.322, 23.536]
-# fmted_holder = [
-#     ["1", "_gateway", "(192.168.10.1)", 3.027],
-#     ["3", "hari-core-2a-xe-305-0.network.virginmedia.net", "(62.252.114.145)", 20.703],
-#     ["5", "tele-ic-7-ae2-0.network.virginmedia.net", "(62.253.175.34)", 24.596],
-#     ["6", "74-14-250-212.static.virginm.net", "(212.250.14.74)", 22.152],
-#     ["7", "74.125.242.97", "(74.125.242.97)", 27.031],
-#     ["8", "64.233.175.107", "(64.233.175.107)", 27.322],
-#     ["9", "dns.google", "(8.8.8.8)", 23.536],
-# ]
-
-# high initial
-# total_times_ms = [3.027, 152.703, 24.596, 22.152, 27.031, 27.322, 23.536]
-# fmted_holder = [
-#     ["1", "_gateway", "(192.168.10.1)", 3.027],
-#     ["3", "hari-core-2a-xe-305-0.network.virginmedia.net", "(62.252.114.145)", 152.703],
-#     ["5", "tele-ic-7-ae2-0.network.virginmedia.net", "(62.253.175.34)", 24.596],
-#     ["6", "74-14-250-212.static.virginm.net", "(212.250.14.74)", 22.152],
-#     ["7", "74.125.242.97", "(74.125.242.97)", 27.031],
-#     ["8", "64.233.175.107", "(64.233.175.107)", 27.322],
-#     ["9", "dns.google", "(8.8.8.8)", 23.536],
-# ]
-
-# high ascending
-# total_times_ms = [3.027, 152.703, 24.596, 901, 800, 948, 999]
-# fmted_holder = [
-#     ["1", "_gateway", "(192.168.10.1)", 3.027],
-#     ["3", "hari-core-2a-xe-305-0.network.virginmedia.net", "(62.252.114.145)", 152.703],
-#     ["5", "tele-ic-7-ae2-0.network.virginmedia.net", "(62.253.175.34)", 24.596],
-#     ["6", "74-14-250-212.static.virginm.net", "(212.250.14.74)", 901],
-#     ["7", "74.125.242.97", "(74.125.242.97)", 800],
-#     ["8", "64.233.175.107", "(64.233.175.107)", 948],
-#     ["9", "dns.google", "(8.8.8.8)", 999],
-# ]

@@ -150,7 +150,12 @@ class ColourPrinter:
                 fmt_func_str="fmt_bold_col1",
             )
 
-    def exit_with_bye_if_none(self, check_var, cmd_run):
+    def exit_with_bye_if_none(self, check_var, cmd_run=None, cust_msg=None):
         if check_var is None:
-            self.fmt_bold_red(f"Cannot run `{cmd_run}`. Is it installed?\nExiting...")
+            if cust_msg is None:
+                self.fmt_bold_red(
+                    f"Cannot run `{cmd_run}`. Is it installed?\nExiting..."
+                )
+            else:
+                self.fmt_bold_red(cust_msg)
             sys.exit(1)
