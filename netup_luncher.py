@@ -2,6 +2,7 @@
 
 import sys
 import argparse
+import icontract
 from components.helpers import run_cmd_with_errorcode, check_url_dict
 from components.printers import ColourPrinter
 from components.connectivity_checker import check_connx_main, run_publicip_routine
@@ -54,7 +55,7 @@ class NetupLauncher:
         getattr(self, args.command)()
 
     @staticmethod
-    def _str2bool(putative_cli_bool):
+    def _str2bool(putative_cli_bool: str) -> None:
         if isinstance(putative_cli_bool, bool):
             return putative_cli_bool
 
@@ -66,7 +67,7 @@ class NetupLauncher:
             raise argparse.ArgumentTypeError("Boolean value expected.")
 
     @staticmethod
-    def connx():
+    def connx() -> None:
         """Launch subroutine to check connection details using route & nmcli"""
 
         print("\nLaunching route & nmcli subroutine...\n")

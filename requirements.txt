@@ -17,7 +17,10 @@ importlab==0.5.1
 iniconfig==1.1.1
 isort==5.6.4
 lazy-object-proxy==1.4.3
+libcst==0.3.16
 mccabe==0.6.1
+MonkeyType==20.5.0
+mypy==0.790
 mypy-extensions==0.4.3
 networkx==2.5
 ninja==1.10.0.post2
@@ -41,5 +44,6 @@ sortedcontainers==2.3.0
 toml==0.10.2
 typed-ast==1.4.1
 typing-extensions==3.7.4.3
+typing-inspect==0.6.0
 urllib3==1.26.2
 wrapt==1.12.1
