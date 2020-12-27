@@ -8,12 +8,15 @@ from components.helpers import (
     substr_dict_key_search,
 )
 from components.printers import ColourPrinter
+from typing import Dict, List, Tuple
 
 
 class DNSServers:
     """Class to check Domain names via HTTPS and Nameserver queries."""
 
-    def __init__(self, active_nmcli_dict, check_url_dict):
+    def __init__(
+        self, active_nmcli_dict: Dict[str, str], check_url_dict: Dict[str, str]
+    ) -> None:
         self.active_nmcli_dict = active_nmcli_dict
         self.check_url_dict = check_url_dict
         self.test_domains = list(self.check_url_dict.keys())
@@ -21,7 +24,7 @@ class DNSServers:
 
         self.prt = ColourPrinter()
 
-    def calc_dns_fail_percent(self, results_dict):
+    def calc_dns_fail_percent(self, results_dict: Dict[str, str]) -> float:
         """
         Calculate the percentage failed dns lookups for one dns server.
         """
@@ -40,19 +43,7 @@ class DNSServers:
 
         return fail_percent
 
-    def print_with_dns_header(self, results_dict, header):
-        """Print curl result with percentage fail number in header."""
-
-        fail_percent = self.calc_dns_fail_percent(results_dict=results_dict)
-        self.prt.print_dict_results(
-            results_dict=results_dict,
-            header=f"{header} {fail_percent}%",
-            fmt_func_str="fmt_ok_error",
-        )
-
-        return fail_percent
-
-    def find_name_servers(self):
+    def find_name_servers(self) -> Tuple[List[str], bool]:
         """
         Creates a list of dns servers used by the system.
         Reference google DNS nameserver (8.8.8.8) is added to compare against
@@ -72,7 +63,7 @@ class DNSServers:
         return (dns_servers, added_google_ns)
 
     @staticmethod
-    def query_dns_via_udp(nameserver, mydomain):
+    def query_dns_via_udp(nameserver: str, mydomain: str) -> str:
         """
         Returns a string of ip addresses returned by querying the specified
         nameserver of UDP (port 53).
@@ -107,7 +98,7 @@ class DNSServers:
 
         return a_record_str
 
-    def check_dns_servers(self, dns_servers):
+    def check_dns_servers(self, dns_servers: List[str]) -> Dict[str, List[List[str]]]:
         """
         Try to resolve sites by checking each dns servers individually.
         """
@@ -123,7 +114,7 @@ class DNSServers:
                 dns_results_dict[mydns].append([site, ip_arecords])
         return dns_results_dict
 
-    def dns_check_main(self):
+    def dns_check_main(self) -> None:
         """
         Main routine to check dns servers bt:
             1. domain name
@@ -131,14 +122,16 @@ class DNSServers:
         Assumes that google dns server 8.8.8.8 is highly available
         """
 
-        ################################################################################
+        #########################################################
         ### Check if we can curl websites over https
 
         domain_results = curl_websites(url_dict=self.test_domains, timeout=10)
 
-        fail_perc = self.print_with_dns_header(
+        fail_perc = self.calc_dns_fail_percent(results_dict=domain_results)
+        self.prt.print_dict_results(
             results_dict=domain_results,
-            header="Curl website domain (HTTPS) fail rate =",
+            header=f"Curl website domain (HTTPS) fail rate = {fail_perc}%",
+            fmt_func_str="fmt_ok_error",
         )
 
         if fail_perc == 100:
@@ -152,7 +145,7 @@ class DNSServers:
                 mystr="Warning: A few test sites could not be curled over HTTPS."
             )
 
-        ################################################################################
+        #########################################################
         ### Check DNS servers
         print("\nNow testing DNS servers..")
 
@@ -166,27 +159,29 @@ class DNSServers:
                 list_of_2nelem_lists=list_of_2nelem_lists
             )
 
-            fail_perc = self.print_with_dns_header(
+            fail_perc2 = self.calc_dns_fail_percent(results_dict=dns_dict)
+            self.prt.print_dict_results(
                 results_dict=dns_dict,
-                header=f"NameServer {nameserver} UDP Lookup fail rate =",
+                header=f"NameServer {nameserver} UDP Lookup fail rate = {fail_perc2}%",
+                fmt_func_str="fmt_ok_error",
             )
 
-            dns_fail_perc_dict[nameserver] = fail_perc
+            dns_fail_perc_dict[nameserver] = fail_perc2
 
         all_perc_fails = {
             True if perc > 80 else False for perc in list(dns_fail_perc_dict.values())
         }
 
-        ################################################################################
+        #########################################################
         ### Print DNS messages
         google_ns_perc = dns_fail_perc_dict.pop("8.8.8.8")
-        for nameserver, fail_perc in dns_fail_perc_dict.items():
+        for nameserver, fail_perc3 in dns_fail_perc_dict.items():
             msg = None
-            if fail_perc > 41:
+            if fail_perc3 > 41:
 
                 msg = (
                     f"Nameserver {nameserver} is having trouble resolving "
-                    + f"{fail_perc}% of test domains.."
+                    + f"{fail_perc3}% of test domains.."
                 )
 
                 if added_google_ns and google_ns_perc < 40:
@@ -200,7 +195,7 @@ class DNSServers:
                 self.prt.fmt_bold_red(mystr=msg)
 
         if len(all_perc_fails) == 1 and all_perc_fails:
-            prt.self.prt.fmt_bold_red(
+            self.prt.fmt_bold_red(
                 mystr=(
                     "All configured DNS servers are experiencing trouble "
                     + "resolving addresses over UDP"

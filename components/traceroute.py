@@ -134,8 +134,8 @@ def eval_high_hop_latency_msg(
             list_of_nelem_lists=large_latency_str, keyn=2, valn=-1
         )
 
-        fmt_bold_red(mystr="Hops with large latencies found:")
-        print_dict_results(
+        prt.fmt_bold_red(mystr="Hops with large latencies found:")
+        prt.print_dict_results(
             results_dict=largehop_dict,
             header=f"Hops with large latency (> {LARGE_THRESHOLD} ms)",
             fmt_func_str="fmt_keyok_valerror",
@@ -143,7 +143,7 @@ def eval_high_hop_latency_msg(
 
         local_hop_high = is_local_latency_high(large_latency_idx=large_latency_idx)
         if local_hop_high:
-            fmt_bold_red(
+            prt.fmt_bold_red(
                 mystr=(
                     "! High latencies near traceroute start.\n"
                     + "Issues are likely to be present in your local network or with your ISP"
