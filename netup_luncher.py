@@ -30,7 +30,7 @@ class NetupLauncher:
     Parse command line options and select netup launch mode.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
 
         self.prt = ColourPrinter()
 
@@ -75,7 +75,7 @@ class NetupLauncher:
         print("\nExiting.")
 
     @staticmethod
-    def publicip():
+    def publicip() -> None:
         """Launch subroutine to check publicip"""
 
         print("\nLaunching publicip subroutine...\n")
@@ -84,7 +84,7 @@ class NetupLauncher:
         print("\nExiting.")
 
     @staticmethod
-    def dns():
+    def dns() -> None:
         """Launch subroutine to check DNS Servers"""
 
         print("\nLaunching DNS Server check subroutine...\n")
@@ -98,7 +98,7 @@ class NetupLauncher:
         print("\nExiting.")
 
     @staticmethod
-    def traceroute():
+    def traceroute() -> None:
         """Launch subroutine to perform traceroute"""
 
         print("\nLaunching traceroute check subroutine...\n")
@@ -106,7 +106,7 @@ class NetupLauncher:
 
         print("\nExiting.")
 
-    def all(self):
+    def all(self) -> None:
         """Launch all routines to detect internet connectivity issues"""
 
         parser = argparse.ArgumentParser(description="Run all diagnostics")
