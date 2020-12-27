@@ -149,3 +149,8 @@ class ColourPrinter:
                 header=f"Iface info for: {iface}",
                 fmt_func_str="fmt_bold_col1",
             )
+
+    def exit_with_bye_if_none(self, check_var, cmd_run):
+        if check_var is None:
+            self.fmt_bold_red(f"Cannot run `{cmd_run}`. Is it installed?\nExiting...")
+            sys.exit(1)

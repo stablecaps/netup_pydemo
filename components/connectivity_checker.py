@@ -9,9 +9,12 @@ from components.helpers import (
     process_subp_output,
 )
 from components.printers import ColourPrinter
+from typing import Dict, List, Optional
+
+prt = ColourPrinter()
 
 
-def get_iface_info():
+def get_iface_cmd_dict() -> Dict[str, str]:
     """
     Returns a dictionary with network interface data as a result of running `route -n`.
 
@@ -22,6 +25,8 @@ def get_iface_info():
     """
 
     route_cmd = run_cmd_with_output("route -n")
+    prt.exit_with_bye_if_none(check_var=route_cmd, cmd_run="route -n")
+
     iface_info = process_subp_output(cmd_output=route_cmd, delimiter=" ")
 
     interface_dict = {}
@@ -36,35 +41,7 @@ def get_iface_info():
     return interface_dict
 
 
-def get_nmcli_info():
-    """
-    Returns a dictionary with network connection data as a result of running `rnmcli dev show`.
-    """
-
-    route_cmd = run_cmd_with_output("nmcli dev show")
-    nmcli_info = process_subp_output(cmd_output=route_cmd, delimiter=": ")
-
-    nmcli_dict = {}
-    for subli in nmcli_info:
-
-        assert len(subli) == 2, "nmcli split error. script assumes 2 values per line"
-
-        nmkey = subli[0]
-        nmval = subli[1]
-        if nmkey == "GENERAL.DEVICE":
-            ### Create a new key with empty list ready to be appended to
-            dict_key = nmval
-            nmcli_dict[dict_key] = []
-        else:
-            nmcli_dict[dict_key].append([nmkey, nmval])
-
-    return nmcli_dict
-
-
-def run_iface_subroutine():
-    prt = ColourPrinter()
-
-    iface_dict = get_iface_info()
+def get_default_iface(iface_dict) -> Optional[str]:
 
     prt.print_dict_results(
         results_dict=iface_dict,
@@ -88,14 +65,37 @@ def run_iface_subroutine():
     return default_iface
 
 
-def run_nmcli_subroutine(default_iface):
+def get_nmcli_cmd_dict() -> Dict[str, List[List[str]]]:
+    """
+    Returns a dictionary with network connection data as a result of running `rnmcli dev show`.
+    """
+
+    nmcli_cmd = run_cmd_with_output("nmcli dev show")
+    prt.exit_with_bye_if_none(check_var=nmcli_cmd, cmd_run="nmcli dev show")
+
+    nmcli_info = process_subp_output(cmd_output=nmcli_cmd, delimiter=": ")
+
+    nmcli_dict = {}
+    for subli in nmcli_info:
+
+        assert len(subli) == 2, "nmcli split error. script assumes 2 values per line"
+
+        nmkey = subli[0]
+        nmval = subli[1]
+        if nmkey == "GENERAL.DEVICE":
+            ### Create a new key with empty list ready to be appended to
+            dict_key = nmval
+            nmcli_dict[dict_key] = []
+        else:
+            nmcli_dict[dict_key].append([nmkey, nmval])
+
+    return nmcli_dict
+
+
+def process_nmcli_dict(nmcli_all_dict, default_iface: str) -> Dict[str, str]:
     """
     Get connection info for main network interface.
     """
-
-    prt = ColourPrinter()
-
-    nmcli_all_dict = get_nmcli_info()
 
     active_nmcli_dict = list_of_2nelem_lists_2dict(
         list_of_2nelem_lists=nmcli_all_dict[default_iface]
@@ -131,14 +131,12 @@ def run_nmcli_subroutine(default_iface):
     return active_nmcli_dict
 
 
-def run_publicip_routine():
+def run_publicip_routine() -> None:
     """
     Main routine to check:
     1.  users basic connection details & gateway (router) situation
     2.  users public IP address can be retrived via an https lookup or alternatively via dig
     """
-
-    prt = ColourPrinter()
 
     public_ip_https = whatis_publicip(ip_check_url="https://ipinfo.io/ip", timeout=2)
 
@@ -147,6 +145,9 @@ def run_publicip_routine():
     # TODO: add alts
     public_ip_dig = run_cmd_with_output(
         comm_str="dig @208.67.220.222 myip.opendns.com +short"
+    )
+    prt.exit_with_bye_if_none(
+        check_var=public_ip_dig, cmd_run="dig @208.67.220.222 myip.opendns.com +short"
     )
 
     if public_ip_https is None:
@@ -168,14 +169,20 @@ def run_publicip_routine():
     ############################################################
 
 
-def check_connx_main():
+def check_connx_main() -> Dict[str, str]:
     """
     Subroutine to check connection details using route & nmcli.
     """
 
-    default_iface = run_iface_subroutine()
+    iface_dict = get_iface_cmd_dict()
 
-    active_nmcli_dict = run_nmcli_subroutine(default_iface=default_iface)
+    default_iface = get_default_iface(iface_dict=iface_dict)
+
+    nmcli_all_dict = get_nmcli_cmd_dict()
+
+    active_nmcli_dict = process_nmcli_dict(
+        nmcli_all_dict=nmcli_all_dict, default_iface=default_iface
+    )
 
     run_publicip_routine()
 

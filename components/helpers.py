@@ -4,6 +4,7 @@ import shlex
 import subprocess
 import requests
 from requests.exceptions import HTTPError, Timeout
+from typing import Dict, List, Optional
 
 check_url_dict = {
     "www.google.com": "216.58.204.228",
@@ -14,7 +15,7 @@ check_url_dict = {
 }
 
 
-def get_https_request_status(myurl, timeout=10):
+def get_https_request_status(myurl: str, timeout: int = 10) -> str:
     """
     Perform simple get request to a website over HTTPS.
     """
@@ -35,7 +36,7 @@ def get_https_request_status(myurl, timeout=10):
     return result
 
 
-def curl_websites(url_dict, timeout=10):
+def curl_websites(url_dict: List[str], timeout: int = 10) -> Dict[str, str]:
     """
     Use requests to get http response codes or appopriate error from a list of websites.
     https://realpython.com/python-requests/
@@ -51,7 +52,9 @@ def curl_websites(url_dict, timeout=10):
     return results_dict
 
 
-def whatis_publicip(ip_check_url="https://ipinfo.io/ip", timeout=10):
+def whatis_publicip(
+    ip_check_url: str = "https://ipinfo.io/ip", timeout: int = 10
+) -> str:
     """
     Find users public IP address from a url service.
     """
@@ -68,7 +71,7 @@ def whatis_publicip(ip_check_url="https://ipinfo.io/ip", timeout=10):
     return resp.text
 
 
-def shlex_convert_str_2list(comm_str):
+def shlex_convert_str_2list(comm_str: str) -> List[str]:
     """
     Convert a linux command into list format with shlex.
     """
@@ -81,7 +84,7 @@ def shlex_convert_str_2list(comm_str):
     return split_comm_clean
 
 
-def run_cmd_with_output(comm_str):
+def run_cmd_with_output(comm_str: str) -> Optional[bytes]:
     """
     Run a subprocess command and print error message on failure.
     Also returns output on success and
@@ -94,12 +97,11 @@ def run_cmd_with_output(comm_str):
         sp_resp = subprocess.check_output(split_comm_clean)
         return sp_resp
     except Exception as err:
-        print("\n")
-        print(err)
-        return False
+        print(f"\n{err}")
+        return None
 
 
-def run_cmd_with_errorcode(comm_str):
+def run_cmd_with_errorcode(comm_str: str) -> bool:
     """
     Run a subprocess command and print error code on failure.
     Also returns output on success and
@@ -117,7 +119,9 @@ def run_cmd_with_errorcode(comm_str):
     return True
 
 
-def process_subp_output(cmd_output, delimiter="\t", exclude_list=["", " "]):
+def process_subp_output(
+    cmd_output: bytes, delimiter: str = "\t", exclude_list: List[str] = ["", " "]
+) -> List[List[str]]:
     """
     Preprocesses output from subprocess command and returns a list of lists,
     Each sublist corresponds to a row in the output.
@@ -138,7 +142,7 @@ def process_subp_output(cmd_output, delimiter="\t", exclude_list=["", " "]):
     return holder
 
 
-def substr_dict_key_search(in_dict, search_term):
+def substr_dict_key_search(in_dict: Dict[str, str], search_term: str) -> List[str]:
     """
     Returns a list of values from a dictionary depending on what keys are matched
     by the substring specified by search_term.
@@ -148,7 +152,7 @@ def substr_dict_key_search(in_dict, search_term):
     return match_list
 
 
-def list_of_2nelem_lists_2dict(list_of_2nelem_lists):
+def list_of_2nelem_lists_2dict(list_of_2nelem_lists: List[List[str]]) -> Dict[str, str]:
     """
     Takes in a list_of_2nelem_lists such as [[key1, val1], [key2, val2], [key3, val3]]
     and returns a dictionary.
@@ -163,7 +167,9 @@ def list_of_2nelem_lists_2dict(list_of_2nelem_lists):
     return mydict
 
 
-def list_of_nelem_lists_2dict(list_of_nelem_lists, keyn=1, valn=-1):
+def list_of_nelem_lists_2dict(
+    list_of_nelem_lists: List[List[str]], keyn: int = 1, valn: int = -1
+) -> Dict[str, str]:
     """
     Takes in a list_of_nelem_lists such as [[val1, val2, val3, ..., ...], [val1, val2, val3, ..., ...], [val1, val2, val3, ..., ...]]
     and returns a dictionary.

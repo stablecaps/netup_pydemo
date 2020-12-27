@@ -16,6 +16,7 @@ route (built into 20.04)
 nmcli (built into 20.04)
 nc (netcat)
 traceroute
+dig
 ```
 
 ## Install
