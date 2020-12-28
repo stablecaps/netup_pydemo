@@ -1,12 +1,14 @@
 """Functions to assist printing to the terminal."""
 
 import sys
-from blessings import Terminal
+from typing import Dict, List, Optional
+from blessings import Terminal  # type: ignore
 from components.helpers import list_of_2nelem_lists_2dict
-from typing import Any, Dict, List, Optional, Union
 
 
 class ColourPrinter:
+    """Class that handles colour printing & sexy exits."""
+
     def __init__(self) -> None:
         self.term = Terminal()
 
@@ -18,7 +20,7 @@ class ColourPrinter:
             "fmt_bold_col1": self.fmt_bold_col1,
         }
 
-    def fmt_bold_red(self, mystr: str) -> None:
+    def fmt_bold_red(self, mystr: Optional[str]) -> None:
         """
         Return a string formatted in bold red.
         """
@@ -32,9 +34,8 @@ class ColourPrinter:
 
         print(f"\n{self.term.yellow}{self.term.bold}{mystr}{self.term.normal}")
 
-    def get_longest_str_in_dict(
-        self, mydict: Dict[str, str], mode: str = "keys"
-    ) -> int:
+    @staticmethod
+    def get_longest_str_in_dict(mydict: Dict[str, str], mode: str = "keys") -> int:
         """
         Return an integer corresponding to the greatest number of characters
         from all the keys or values in a dictionary.
@@ -62,7 +63,9 @@ class ColourPrinter:
         Key is always green bold.
         """
 
-        max_spaces = self.get_longest_str_in_dict(mydict=results_dict, mode="keys")
+        max_spaces = ColourPrinter.get_longest_str_in_dict(
+            mydict=results_dict, mode="keys"
+        )
         for key, value in results_dict.items():
             key_just = (key + ":").ljust(max_spaces, " ")
             if "OK - " in value:
@@ -71,7 +74,10 @@ class ColourPrinter:
                 )
             else:
                 print(
-                    f"{self.term.bold}{self.term.green}{key_just} {self.term.normal}\t{self.term.red}{value}{self.term.normal}"
+                    (
+                        f"{self.term.bold}{self.term.green}{key_just}"
+                        + f" {self.term.normal}\t{self.term.red}{value}{self.term.normal}"
+                    )
                 )
 
     def fmt_keyok_valerror(self, results_dict: Dict[str, str]) -> None:
@@ -80,11 +86,14 @@ class ColourPrinter:
         Key is always green bold.
         """
 
-        max_spaces = self.get_longest_str_in_dict(mydict=results_dict, mode="keys")
+        max_spaces = ColourPrinter.get_longest_str_in_dict(
+            mydict=results_dict, mode="keys"
+        )
         for key, value in results_dict.items():
             key_just = (key + ":").ljust(max_spaces, " ")
             print(
-                f"{self.term.bold}{self.term.green}{key_just} {self.term.normal}\t{self.term.red}{value}{self.term.normal}"
+                f"{self.term.bold}{self.term.green}{key_just}"
+                + f" {self.term.normal}\t{self.term.red}{value}{self.term.normal}"
             )
 
     def fmt_ok_error_dns(self, results_dict: Dict[str, str]) -> None:
@@ -96,12 +105,15 @@ class ColourPrinter:
 
         # TODO: see if this can be combined with fmt_ok_error()
 
-        max_spaces = self.get_longest_str_in_dict(mydict=results_dict, mode="keys")
+        max_spaces = ColourPrinter.get_longest_str_in_dict(
+            mydict=results_dict, mode="keys"
+        )
         for key, value in results_dict.items():
             key_just = (key + ":").ljust(max_spaces, " ")
             if value.startswith("The DNS"):
                 print(
-                    f"{self.term.green}{self.term.bold}{key_just} {self.term.normal}\t{self.term.red}{value}{self.term.normal}"
+                    f"{self.term.green}{self.term.bold}{key_just}"
+                    + f" {self.term.normal}\t{self.term.red}{value}{self.term.normal}"
                 )
             else:
                 print(
@@ -115,7 +127,9 @@ class ColourPrinter:
         All text is green
         """
 
-        max_spaces = self.get_longest_str_in_dict(mydict=results_dict, mode="keys")
+        max_spaces = ColourPrinter.get_longest_str_in_dict(
+            mydict=results_dict, mode="keys"
+        )
         for key, value in results_dict.items():
             key_just = (key + ":").ljust(max_spaces, " ")
             print(
@@ -154,9 +168,8 @@ class ColourPrinter:
             iface_name_li = list(nmcli_all_dict.keys())
 
         for iface in iface_name_li:
-            iface_dict = list_of_2nelem_lists_2dict(
-                list_of_2nelem_lists=nmcli_all_dict[iface]
-            )
+            iface_lol = nmcli_all_dict[iface]
+            iface_dict = list_of_2nelem_lists_2dict(list_of_2nelem_lists=iface_lol)
 
             self.print_dict_results(
                 results_dict=iface_dict,
@@ -166,7 +179,7 @@ class ColourPrinter:
 
     def exit_with_bye_if_none(
         self,
-        check_var: Union[bytes, List[List[Union[str, float]]]],
+        check_var: Optional[bytes],
         cmd_run: Optional[str] = None,
         cust_msg: Optional[str] = None,
     ) -> None:
@@ -187,5 +200,5 @@ class ColourPrinter:
                 )
 
             if cmd_run is not None:
-                self.fmt_bold_red(cust_msg)
+                self.fmt_bold_red(mystr=cust_msg)
             sys.exit(1)

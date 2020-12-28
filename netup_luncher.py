@@ -1,8 +1,10 @@
-"""Main entrpoint to run code taht checks and evaluates reasons for loss in internet connectivity."""
+"""
+Main entrpoint to run code taht checks and evaluates reasons for loss in internet connectivity.
+"""
 
 import sys
 import argparse
-import icontract
+from typing import Optional
 from components.helpers import run_cmd_with_errorcode, check_url_dict
 from components.printers import ColourPrinter
 from components.connectivity_checker import check_connx_main, run_publicip_routine
@@ -55,7 +57,7 @@ class NetupLauncher:
         getattr(self, args.command)()
 
     @staticmethod
-    def _str2bool(putative_cli_bool: str) -> None:
+    def _str2bool(putative_cli_bool: str) -> Optional[bool]:
         if isinstance(putative_cli_bool, bool):
             return putative_cli_bool
 
@@ -64,7 +66,11 @@ class NetupLauncher:
         elif putative_cli_bool.lower() in ("no", "false", "f", "n", "0"):
             return False
         else:
-            raise argparse.ArgumentTypeError("Boolean value expected.")
+            print("putative_cli_bool arg not processed")
+
+        raise argparse.ArgumentTypeError(
+            f"Cannot parse {putative_cli_bool} into boolean."
+        )
 
     @staticmethod
     def connx() -> None:

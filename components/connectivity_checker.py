@@ -1,6 +1,7 @@
 """Check connectivity using route and nmcli."""
 
 import sys
+from typing import Dict, List, Optional
 from components.helpers import (
     whatis_publicip,
     run_cmd_with_output,
@@ -9,7 +10,6 @@ from components.helpers import (
     process_subp_output,
 )
 from components.printers import ColourPrinter
-from typing import Dict, List, Optional
 
 prt = ColourPrinter()
 
@@ -41,7 +41,10 @@ def get_iface_cmd_dict() -> Dict[str, str]:
     return interface_dict
 
 
-def get_default_iface(iface_dict) -> Optional[str]:
+def get_default_iface(iface_dict) -> str:
+    """
+    Recover feault iface from iface_dict if present or return `None`.
+    """
 
     prt.print_dict_results(
         results_dict=iface_dict,
@@ -51,15 +54,15 @@ def get_default_iface(iface_dict) -> Optional[str]:
 
     default_iface = iface_dict.get("0.0.0.0", None)
 
-    if default_iface is None:
-        prt.fmt_bold_red(
-            mystr=(
-                "\nNo default gateway detected."
-                + "\nPlease check network cable/connection."
-                + "\nExiting.."
-            )
-        )
-        sys.exit(1)
+    prt.exit_with_bye_if_none(
+        check_var=default_iface,
+        cust_msg=(
+            "\nNo default gateway detected."
+            + "\nPlease check network cable/connection."
+            + "\nExiting.."
+        ),
+    )
+
     prt.fmt_bold_yellow(mystr=f"Default iface is {default_iface}")
 
     return default_iface

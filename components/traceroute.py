@@ -1,14 +1,13 @@
 """Traceroute module."""
 
-import sys
 import re
+from typing import Any, List, Tuple, Union
 from components.helpers import (
     run_cmd_with_output,
     process_subp_output,
     list_of_nelem_lists_2dict,
 )
 from components.printers import ColourPrinter
-from typing import Any, List, Tuple, Union
 
 LARGE_THRESHOLD = 150
 prt = ColourPrinter()
@@ -40,7 +39,8 @@ def get_traceroute_data_structs(
     """
     Macro function that:
         1. Processes traceroute header (header) & main body
-        2. Returns a list of list containing traceroute output data with averaged times (fmted_holder)
+        2. Returns a list of list containing traceroute output data with
+           averaged times (fmted_holder)
         3. Retrns a flat list with traceroute with averaged timings in ms
     """
 
@@ -56,17 +56,20 @@ def get_traceroute_data_structs(
                 hop = sublist[0]
                 name = sublist[1]
                 ip_addr = sublist[2]
-                fmt_row = [hop, name, ip_addr]
 
+                ###
                 calc_list = [
                     float(elem) for elem in sublist[3:] if not ip_addr_re.match(elem)
                 ]
 
                 len_calc = len(calc_list)
                 avg_time = round(sum(calc_list) / len_calc, 3)
+                #
+                fmt_row = [hop, name, ip_addr]
                 fmt_row.append(avg_time)
+                #
                 fmted_holder.append(fmt_row)
-
+                print("fmt_row", fmt_row)
                 total_times_ms.append(avg_time)
 
     return (fmted_holder, total_times_ms, header)
@@ -102,7 +105,6 @@ def gen_fmted_str_holder(
 
     fmted_holder_str = []
     for row in fmted_holder:
-        # print(row)
         time_str = f"{str(row[-1])} ms average"
         row[-1] = time_str
         fmted_holder_str.append(row)
@@ -162,7 +164,8 @@ def eval_final_msg(final_hop: str, len_fmted_holder_str: int) -> None:
     if final_hop == "dns.google":
         hit_str = "Managed to hit dns.google DNS name"
     elif final_hop == "8.8.8.8":
-        # TODO: establish whether traceroute falls back to ip address if it fails on name (my router is flaky)
+        # TODO: establish whether traceroute falls back to ip address if it f
+        # fails on name (my router is flaky)
         hit_str = "Managed to hit 8.8.8.8 IP Add"  # but not dns.google DNS name"
     else:
         hit_str = "Failed to hit dns.google name or 8.8.8.8 IP."
@@ -193,19 +196,17 @@ def traceroute_main() -> None:
         0. do we actually hit endpoint with a time?
         1. anything over 150ms is long and should raise warning
         2. high latency in 1st 3 hops indicates difficulty leaving our network & isp
-        3. TODO: Increasing latency towards the target: If you see a sudden increase in a hop and it keeps increasing to the destination (if it even gets there), then this indicates an issue starting at the hop with the increase.
-        4. Timeouts at the very end of the report: Possible connection problem at the target. This will affect the connection.
+        3. TODO: Increasing latency towards the target: If you see a sudden increase
+           in a hop and it keeps increasing to the destination (if it even gets there),
+           then this indicates an issue starting at the hop with the increase.
+        4. Timeouts at the very end of the report: Possible connection problem at the target.
+           This will affect the connection.
     """
 
     ### Run traceroute
     trace_fmt = run_traceroute()
     fmted_holder, total_times_ms, header = get_traceroute_data_structs(
         trace_fmt=trace_fmt
-    )
-
-    # TODO: sort out granularity of this error by processing traceroute exit codes properly
-    prt.exit_with_bye_if_none(
-        check_var=fmted_holder, cust_msg="Check your network cable/connection.."
     )
 
     #########################################################

@@ -2,12 +2,14 @@
 
 import shlex
 import subprocess
+from typing import Dict, List, Optional, Union
 import requests
-from requests.exceptions import HTTPError, Timeout
-from typing import Dict, List, Optional
+from requests.exceptions import HTTPError, ConnectTimeout
+from requests.exceptions import ConnectionError as ReqConnectionError
 
 check_url_dict = {
     "www.google.com": "216.58.204.228",
+    # TODO: sort out isp simulate-error-tuydutyi.com redirect
     "simulate-error-tuydutyi.com": "8.8.8.8",  # 8.8.8.8 ip address simulates working dns
     "www.duckduckgo.com": "52.142.124.215",
     "www.bing.com": "13.107.21.200",
@@ -26,9 +28,9 @@ def get_https_request_status(myurl: str, timeout: int = 10) -> str:
         result = f"OK - {str(status_code)}"
     except HTTPError as err:
         result = f"OK - {str(err)}"
-    except requests.ConnectTimeout as err:
+    except ConnectTimeout as err:
         result = f"Timeout - {str(err)}"
-    except requests.ConnectionError as err:
+    except ReqConnectionError as err:
         result = f"Connection Error - {str(err)}"
     except Exception as err:
         result = f"Other error occurred - str({err})"
@@ -61,9 +63,6 @@ def whatis_publicip(
 
     try:
         resp = requests.get(ip_check_url, timeout=timeout)
-    except Timeout as err:
-        print(err)
-        return None
     except Exception as err:
         print(err)
         return None
@@ -76,7 +75,7 @@ def shlex_convert_str_2list(comm_str: str) -> List[str]:
     Convert a linux command into list format with shlex.
     """
 
-    split_comm = shlex.split(comm_str, " ")
+    split_comm = shlex.split(comm_str)
 
     # remove all instances of empty string
     split_comm_clean = list(filter(lambda a: a != "", split_comm))
@@ -120,14 +119,23 @@ def run_cmd_with_errorcode(comm_str: str) -> bool:
 
 
 def process_subp_output(
-    cmd_output: bytes, delimiter: str = "\t", exclude_list: List[str] = ["", " "]
+    cmd_output: Optional[bytes],
+    delimiter: str = "\t",
+    exclude_list: Union[List[str], None] = None,
 ) -> List[List[str]]:
     """
     Preprocesses output from subprocess command and returns a list of lists,
     Each sublist corresponds to a row in the output.
     Delimiter can be specified to split each row.
     Elements in exclude_list are stripped from each row.
+    `exclude_list` default is `["", " "]`
     """
+    if exclude_list is None:
+        exclude_list = ["", " "]
+
+    assert (
+        cmd_output is not None
+    ), "Error: For process_subp_output(), cmd_output var is None"
 
     holder = []
     for line in cmd_output.decode().split("\n"):
