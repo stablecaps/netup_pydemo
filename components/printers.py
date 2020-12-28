@@ -20,7 +20,7 @@ class ColourPrinter:
             "fmt_bold_col1": self.fmt_bold_col1,
         }
 
-    def fmt_bold_red(self, mystr: Optional[str]) -> None:
+    def fmt_bold_red(self, mystr: str) -> None:
         """
         Return a string formatted in bold red.
         """
