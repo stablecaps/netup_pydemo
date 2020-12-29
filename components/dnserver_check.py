@@ -114,6 +114,15 @@ class DNSServers:
                 dns_results_dict[mydns].append([site, ip_arecords])
         return dns_results_dict
 
+    def print_category_success_fail(self, fail_perc: float, errmsg: str) -> None:
+        """
+        Print error or warning according to fail_percentage score.
+        """
+        if fail_perc > 80:
+            self.prt.fmt_bold_red(mystr=f"Error: {errmsg}")
+        elif 1 < fail_perc < 80:
+            self.prt.fmt_bold_yellow(mystr=f"Warning: {errmsg}")
+
     def dns_check_main(self) -> None:
         """
         Main routine to check dns servers bt:
@@ -133,16 +142,9 @@ class DNSServers:
             fmt_func_str="fmt_ok_error",
         )
 
-        if fail_perc == 100:
-            self.prt.fmt_bold_red(mystr="Error: cannot curl any websites over HTTPS")
-        elif 50 < fail_perc < 100:
-            self.prt.fmt_bold_yellow(
-                mystr="Warning: Cannot curl the majority of test sites over HTTPS."
-            )
-        else:
-            self.prt.fmt_bold_yellow(
-                mystr="Warning: A few test sites could not be curled over HTTPS."
-            )
+        self.print_category_success_fail(
+            fail_perc=fail_perc, errmsg=f"Cannot curl {fail_perc}% websites over HTTPS"
+        )
 
         #########################################################
         ### Check DNS servers
@@ -167,31 +169,39 @@ class DNSServers:
 
             dns_fail_perc_dict[nameserver] = fail_perc2
 
+        ### All dns servers including google which we *may* have added
         all_perc_fails = {
             True if perc > 80 else False for perc in list(dns_fail_perc_dict.values())
         }
 
+        ### Remove google ns for comaprison purposes
+        google_ns_perc = dns_fail_perc_dict.pop("8.8.8.8")
+
+        ### Set check if remaining nservers performed better than google
+        is_googlens_better = {
+            True if perc > google_ns_perc else False
+            for perc in list(dns_fail_perc_dict.values())
+        }
+
         #########################################################
         ### Print DNS messages
-        google_ns_perc = dns_fail_perc_dict.pop("8.8.8.8")
         for nameserver, fail_perc3 in dns_fail_perc_dict.items():
-            msg = None
-            if fail_perc3 > 41:
 
-                msg = (
+            self.print_category_success_fail(
+                fail_perc=fail_perc3,
+                errmsg=(
                     f"Nameserver {nameserver} is having trouble resolving "
-                    + f"{fail_perc3}% of test domains.."
-                )
+                    + f"{fail_perc3}% of test domains vs google which "
+                    + f"failed on {google_ns_perc}%"
+                ),
+            )
 
-                if added_google_ns and google_ns_perc < 40:
-                    msg += (
-                        f"\nHowever, Google's nameserver (8.8.8.8) failed {google_ns_perc}% "
-                        + "\nConsider adding google nameservers 8.8.8.8 & 8.8.4.4 "
-                        + "to your internet connection settings."
-                    )
-
-            if msg is not None:
-                self.prt.fmt_bold_red(mystr=msg)
+        if len(is_googlens_better) == 1 and is_googlens_better and added_google_ns:
+            msg = (
+                "Consider adding google nameservers 8.8.8.8 & 8.8.4.4 "
+                + "to your internet connection settings."
+            )
+            self.prt.fmt_bold_red(mystr=msg)
 
         if len(all_perc_fails) == 1 and all_perc_fails:
             self.prt.fmt_bold_red(

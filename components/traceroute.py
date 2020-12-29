@@ -69,7 +69,6 @@ def get_traceroute_data_structs(
                 fmt_row.append(avg_time)
                 #
                 fmted_holder.append(fmt_row)
-                print("fmt_row", fmt_row)
                 total_times_ms.append(avg_time)
 
     return (fmted_holder, total_times_ms, header)
