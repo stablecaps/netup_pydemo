@@ -24,16 +24,16 @@ def get_https_request_status(myurl: str, timeout: int = 10) -> str:
 
     try:
         resp = requests.get(f"https://{myurl}", timeout=timeout)
-        status_code = resp.status_code
-        result = f"OK - {str(status_code)}"
+        status_code = str(resp.status_code)
+        result = f"OK - {status_code}"
     except HTTPError as err:
-        result = f"OK - {str(err)}"
+        result = f"OK - {err}"
     except ConnectTimeout as err:
-        result = f"Timeout - {str(err)}"
+        result = f"Timeout - {err}"
     except ReqConnectionError as err:
-        result = f"Connection Error - {str(err)}"
+        result = f"Connection Error - {err}"
     except Exception as err:
-        result = f"Other error occurred - str({err})"
+        result = f"Other error occurred - {err}"
 
     return result
 
@@ -46,9 +46,7 @@ def curl_websites(url_dict: List[str], timeout: int = 10) -> Dict[str, str]:
 
     results_dict = {}
     for myurl in url_dict:
-        result = get_https_request_status(
-            myurl=get_https_request_status(myurl), timeout=timeout
-        )
+        result = get_https_request_status(myurl=myurl, timeout=timeout)
         results_dict[myurl] = result
 
     return results_dict

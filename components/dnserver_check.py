@@ -124,7 +124,6 @@ class DNSServers:
 
         #########################################################
         ### Check if we can curl websites over https
-
         domain_results = curl_websites(url_dict=self.test_domains, timeout=10)
 
         fail_perc = self.calc_dns_fail_percent(results_dict=domain_results)
