@@ -13,12 +13,14 @@ def setup_blessings_term(mocker):
     yellow = mocker.PropertyMock()
     red = mocker.PropertyMock()
     bold = mocker.PropertyMock()
+    underline = mocker.PropertyMock()
     normal = mocker.PropertyMock()
 
     type(term).green = green
     type(term).yellow = yellow
     type(term).red = red
     type(term).bold = bold
+    type(term).underline = underline
     type(term).normal = normal
 
     return {
@@ -26,6 +28,7 @@ def setup_blessings_term(mocker):
         "yellow": yellow,
         "red": red,
         "bold": bold,
+        "underline": underline,
         "normal": normal,
     }
 
@@ -133,4 +136,18 @@ def test_fmt_bold_col1(mocker, test_dict=dns_val_dict):
 
     assert term_dict["green"].call_count == 4
     assert term_dict["bold"].call_count == 4
+    assert term_dict["normal"].call_count == 4
+
+
+def test_print_dict_results(mocker, test_dict=dns_val_dict):
+    term_dict = setup_blessings_term(mocker)
+
+    prt = ColourPrinter()
+    prt.print_dict_results(
+        results_dict=test_dict, header="test header", fmt_func_str="fmt_ok_error"
+    )
+
+    assert prt.fmt_ok_error.call_count == 1
+    assert term_dict["bold"].call_count == 5
+    assert term_dict["underline"].call_count == 4
     assert term_dict["normal"].call_count == 4
