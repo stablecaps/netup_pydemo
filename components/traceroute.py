@@ -5,7 +5,7 @@ from typing import Any, List, Tuple, Union
 from components.helpers import (
     run_cmd_with_output,
     process_subp_output,
-    list_of_nelem_lists_2dict,
+    list_of_xnelem_lists_2dict,
 )
 from components.printers import ColourPrinter
 
@@ -33,6 +33,23 @@ def run_traceroute() -> List[List[str]]:
     return trace_fmt
 
 
+def rm_ipaddr_from_list_of_floats(mylist: List[str]) -> List[float]:
+    """
+    Fairly traceroute-specific function.
+    Returns a list of floats from a list by filtering out IPaddr like
+    string structures.
+    """
+
+    assert all(
+        isinstance(value, str) for value in mylist
+    ), """elem in mylist is not a str - rm_ipaddr_from_list_of_floats()"""
+
+    ip_addr_re = re.compile(r"^\(?\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\)?$")
+    numb_list = [float(elem) for elem in mylist if not ip_addr_re.match(elem)]
+
+    return numb_list
+
+
 def get_traceroute_data_structs(
     trace_fmt: List[List[str]],
 ) -> Tuple[List[List[Union[str, float]]], List[float], str]:
@@ -44,24 +61,20 @@ def get_traceroute_data_structs(
         3. Retrns a flat list with traceroute with averaged timings in ms
     """
 
-    ip_addr_re = re.compile(r"^\(?\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\)?$")
-
     fmted_holder = []
     total_times_ms = []
+    header = "Traceroute header not retrived"
     for sublist in trace_fmt:
         if sublist[0] == "traceroute":
             header = " ".join(sublist)
         else:
-            if len(sublist) > 1:
+            if len(sublist) >= 3:
                 hop = sublist[0]
                 name = sublist[1]
                 ip_addr = sublist[2]
 
                 ###
-                calc_list = [
-                    float(elem) for elem in sublist[3:] if not ip_addr_re.match(elem)
-                ]
-
+                calc_list = rm_ipaddr_from_list_of_floats(mylist=sublist[3:])
                 len_calc = len(calc_list)
                 avg_time = round(sum(calc_list) / len_calc, 3)
                 #
@@ -131,8 +144,8 @@ def eval_high_hop_latency_msg(
     """
 
     if len(large_latency_str) > 0:
-        largehop_dict = list_of_nelem_lists_2dict(
-            list_of_nelem_lists=large_latency_str, keyn=2, valn=-1
+        largehop_dict = list_of_xnelem_lists_2dict(
+            list_of_xnelem_lists=large_latency_str, keyn=2, valn=-1
         )
 
         prt.fmt_bold_red(mystr="Hops with large latencies found:")
@@ -216,8 +229,8 @@ def traceroute_main() -> None:
 
     fmted_holder_str = gen_fmted_str_holder(fmted_holder=fmted_holder)
 
-    trace_dict = list_of_nelem_lists_2dict(
-        list_of_nelem_lists=fmted_holder_str, keyn=2, valn=-1
+    trace_dict = list_of_xnelem_lists_2dict(
+        list_of_xnelem_lists=fmted_holder_str, keyn=2, valn=-1
     )
 
     #########################################################

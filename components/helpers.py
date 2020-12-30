@@ -164,6 +164,10 @@ def list_of_2nelem_lists_2dict(list_of_2nelem_lists: List[List[str]]) -> Dict[st
     and returns a dictionary.
     """
 
+    assert all(
+        len(val_subli) >= 2 for val_subli in list_of_2nelem_lists
+    ), """Attempting to slice sublists with with len < 2 in list_of_2nelem_lists_2dict()"""
+
     mydict = {}
     for val_subli in list_of_2nelem_lists:
         key = val_subli[0]
@@ -173,18 +177,24 @@ def list_of_2nelem_lists_2dict(list_of_2nelem_lists: List[List[str]]) -> Dict[st
     return mydict
 
 
-def list_of_nelem_lists_2dict(
-    list_of_nelem_lists: List[List[str]], keyn: int = 1, valn: int = -1
+def list_of_xnelem_lists_2dict(
+    list_of_xnelem_lists: List[List[str]], keyn: int = 1, valn: int = -1
 ) -> Dict[str, str]:
     """
-    Takes in a list_of_nelem_lists such as [[val1, val2, val3, ..., ...], [val1, val2, val3, ..., ...], [val1, val2, val3, ..., ...]]
+    Takes in a list_of_xnelem_lists such as [[val1, val2, val3, ..., ...], [val1, val2, val3, ..., ...], [val1, val2, val3, ..., ...]]
     and returns a dictionary.
     keyn allows user to specify index to slice to `:keyn` (i.e. start --> middle)
     valn allows user to specify index to slice from `:valn` (i.e. middle --> end)
     """
+    norm_valn = abs(valn)
+    slice_vars = [keyn, norm_valn]
+    max_index = max(slice_vars)
+    assert all(
+        len(val_subli) >= max_index for val_subli in list_of_xnelem_lists
+    ), """Attempting to slice sublists with <keyn|valn> value that is too large in list_of_xnelem_lists_2dict()"""
 
     mydict = {}
-    for val_subli in list_of_nelem_lists:
+    for val_subli in list_of_xnelem_lists:
         key = " ".join(val_subli[:keyn])
         value = " ".join(val_subli[valn:])
         mydict[key] = value
