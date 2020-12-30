@@ -1,13 +1,9 @@
-import io
-import sys
+"""Test traceroute module."""
+
+from unittest.mock import patch
 import pytest
-import unittest
-from unittest import TestCase, mock
-from unittest.mock import patch, call, Mock
-from parameterized import parameterized
-import components.helpers as helpo
 import components.traceroute as trace
-from tests.data_for_traceroute import *
+import tests.data_for_traceroute as dat
 
 
 @patch("components.traceroute.run_cmd_with_output")
@@ -17,7 +13,7 @@ def test_run_traceroute(mrun_cmd_with_output, mprocess_subp_output):
 
     mprocess_subp_output.return_value = [["some", "bytes", "bytes"]]
 
-    yabba = trace.run_traceroute()
+    trace.run_traceroute()
 
     assert mrun_cmd_with_output.call_count == 1
     assert mprocess_subp_output.call_count == 1
@@ -25,10 +21,10 @@ def test_run_traceroute(mrun_cmd_with_output, mprocess_subp_output):
 
 @patch("components.traceroute.run_cmd_with_output")
 @patch("components.traceroute.ColourPrinter")
-def test_run_traceroute_None(mrun_cmd_with_output, mprt):
+def test_run_traceroute_none(mrun_cmd_with_output, mprt):
     mrun_cmd_with_output.return_value = None
 
-    yabba = trace.run_traceroute()
+    trace.run_traceroute()
 
     assert mprt.call_count == 1
 
@@ -72,6 +68,7 @@ def test_rm_ipaddr_from_list_of_floats(mylist, expected):
 
 
 def test_rm_ipaddr_from_list_of_floats_exception():
+    mylist = [9, 64.0]
     with pytest.raises(Exception):
         trace.rm_ipaddr_from_list_of_floats(mylist=mylist)
 
@@ -80,15 +77,15 @@ def test_rm_ipaddr_from_list_of_floats_exception():
     "trace_fmt,expected",
     [
         (
-            sample_trace_fmt1,
-            (sample_fmted_holder, sample_trace_times, sample_trace_head1),
+            dat.sample_trace_fmt1,
+            (dat.sample_fmted_holder, dat.sample_trace_times, dat.sample_trace_head1),
         ),
         (
-            sample_calc_avgs1,
+            dat.sample_calc_avgs1,
             (
-                sample_calc_avgs1_result,
-                sample_calc_avgs1_times,
-                sample_calc_avgs1_header,
+                dat.sample_calc_avgs1_result,
+                dat.sample_calc_avgs1_times,
+                dat.sample_calc_avgs1_header,
             ),
         ),
     ],
@@ -101,9 +98,21 @@ def test_get_traceroute_data_structs(trace_fmt, expected):
 @pytest.mark.parametrize(
     "total_times_ms,fmted_holder,expected",
     [
-        (total_times_ms1, fmted_holder1, (large_latency_idx1, large_latency_str1)),
-        (total_times_ms2, fmted_holder2, (large_latency_idx2, large_latency_str2)),
-        (total_times_ms3, fmted_holder3, (large_latency_idx3, large_latency_str3)),
+        (
+            dat.total_times_ms1,
+            dat.fmted_holder1,
+            (dat.large_latency_idx1, dat.large_latency_str1),
+        ),
+        (
+            dat.total_times_ms2,
+            dat.fmted_holder2,
+            (dat.large_latency_idx2, dat.large_latency_str2),
+        ),
+        (
+            dat.total_times_ms3,
+            dat.fmted_holder3,
+            (dat.large_latency_idx3, dat.large_latency_str3),
+        ),
         ([], [[]], ([], [])),
     ],
 )
@@ -130,4 +139,5 @@ def test_get_high_latency_hop_data(total_times_ms, fmted_holder, expected):
 def test_is_local_latency_high(large_latency_idx, expected):
     assert trace.is_local_latency_high(large_latency_idx=large_latency_idx) == expected
 
-def test_eval_high_hop_latency_msg():
+
+# def test_eval_high_hop_latency_msg():

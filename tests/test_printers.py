@@ -1,8 +1,6 @@
-import io
-import sys
+"""Test printer module."""
+
 import pytest
-from unittest import TestCase, mock
-from unittest.mock import patch, call
 from components.printers import ColourPrinter
 
 
@@ -48,7 +46,7 @@ def test_fmt_bold_yellow(mocker):
     term_dict = setup_blessings_term(mocker)
 
     prt = ColourPrinter()
-    prt.fmt_bold_yellow(mystr="testing fmt_bold_red...")
+    prt.fmt_bold_yellow(mystr="testing fmt_bold_yellow...")
 
     assert term_dict["yellow"].call_count == 1
     assert term_dict["bold"].call_count == 1
@@ -84,11 +82,11 @@ ok_error_dict = {
 }
 
 
-def test_fmt_ok_error(mocker, test_dict=ok_error_dict):
+def test_fmt_ok_error(mocker):
     term_dict = setup_blessings_term(mocker)
 
     prt = ColourPrinter()
-    prt.fmt_ok_error(results_dict=test_dict)
+    prt.fmt_ok_error(results_dict=ok_error_dict)
 
     assert term_dict["green"].call_count == 2 * 2
     assert term_dict["red"].call_count == 1 * 2
@@ -96,11 +94,11 @@ def test_fmt_ok_error(mocker, test_dict=ok_error_dict):
     assert term_dict["normal"].call_count == 3 * 2
 
 
-def test_fmt_keyok_valerror(mocker, test_dict=ok_error_dict):
+def test_fmt_keyok_valerror(mocker):
     term_dict = setup_blessings_term(mocker)
 
     prt = ColourPrinter()
-    prt.fmt_keyok_valerror(results_dict=test_dict)
+    prt.fmt_keyok_valerror(results_dict=ok_error_dict)
 
     assert term_dict["green"].call_count == 1 * 4
     assert term_dict["red"].call_count == 1 * 4
@@ -116,11 +114,11 @@ dns_val_dict = {
 }
 
 
-def test_fmt_ok_error_dns(mocker, test_dict=dns_val_dict):
+def test_fmt_ok_error_dns(mocker):
     term_dict = setup_blessings_term(mocker)
 
     prt = ColourPrinter()
-    prt.fmt_ok_error_dns(results_dict=test_dict)
+    prt.fmt_ok_error_dns(results_dict=dns_val_dict)
 
     assert term_dict["green"].call_count == 4
     assert term_dict["red"].call_count == 1
@@ -128,23 +126,23 @@ def test_fmt_ok_error_dns(mocker, test_dict=dns_val_dict):
     assert term_dict["normal"].call_count == 5
 
 
-def test_fmt_bold_col1(mocker, test_dict=dns_val_dict):
+def test_fmt_bold_col1(mocker):
     term_dict = setup_blessings_term(mocker)
 
     prt = ColourPrinter()
-    prt.fmt_bold_col1(results_dict=test_dict)
+    prt.fmt_bold_col1(results_dict=dns_val_dict)
 
     assert term_dict["green"].call_count == 4
     assert term_dict["bold"].call_count == 4
     assert term_dict["normal"].call_count == 4
 
 
-def test_print_dict_results(mocker, test_dict=dns_val_dict):
+def test_print_dict_results(mocker):
     term_dict = setup_blessings_term(mocker)
 
     prt = ColourPrinter()
     prt.print_dict_results(
-        results_dict=test_dict, header="test header", fmt_func_str="fmt_ok_error"
+        results_dict=dns_val_dict, header="test header", fmt_func_str="fmt_ok_error"
     )
 
     # assert prt.fmt_ok_error.call_count == 1

@@ -1,3 +1,5 @@
+"""Data for traceroute tests."""
+
 sample_trace_head1 = "traceroute to 8.8.8.8 (8.8.8.8), 30 hops max, 60 byte packets"
 sample_fmted_holder = [
     ["1", "_gateway", "(192.168.10.1)", 7.158],
