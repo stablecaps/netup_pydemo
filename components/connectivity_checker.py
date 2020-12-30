@@ -1,7 +1,7 @@
 """Check connectivity using route and nmcli."""
 
 import sys
-from typing import Dict, List, Optional
+from typing import Dict, List
 from components.helpers import (
     whatis_publicip,
     run_cmd_with_output,

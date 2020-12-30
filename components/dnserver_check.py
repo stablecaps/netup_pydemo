@@ -1,5 +1,6 @@
 """Check ability of dns servers to resolve sites."""
 
+from typing import Dict, List, Tuple
 import dns.resolver
 import dns.rdatatype
 from components.helpers import (
@@ -8,7 +9,6 @@ from components.helpers import (
     substr_dict_key_search,
 )
 from components.printers import ColourPrinter
-from typing import Dict, List, Tuple
 
 
 class DNSServers:

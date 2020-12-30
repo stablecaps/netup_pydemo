@@ -13,19 +13,6 @@ from components.dnserver_check import DNSServers
 
 from components.traceroute import traceroute_main
 
-# Strategy:
-# Start with higher level requests, then move towards more granular tests
-# 1. try to service a simple web request using curl & FQDN
-# 1b. try fallback urls
-# 2. On failure try using known ip address
-# 3. On failure assess base network connectivity
-#   *  ifconfig?
-#   *  check how far we can go out - traceroute
-#   *  check local network saturation - (store snapshots from previous trials)
-#   *
-# 4. check broadband provider status
-# 5. check dns servers in
-
 
 class NetupLauncher:
     """
