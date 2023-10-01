@@ -33,6 +33,14 @@ def run_traceroute() -> List[List[str]]:
     return trace_fmt
 
 
+def rm_nondigits_fromstr(mystr):
+    """
+    Replace every non-digit character in the string.
+    """
+
+    return mystr.replace("ms", "").replace("ns", "")
+
+
 def rm_ipaddr_from_list_of_floats(mylist: List[str]) -> List[float]:
     """
     Fairly traceroute-specific function.
@@ -40,12 +48,17 @@ def rm_ipaddr_from_list_of_floats(mylist: List[str]) -> List[float]:
     string structures.
     """
 
+    print("mylist", mylist)
     assert all(
         isinstance(value, str) for value in mylist
     ), """elem in mylist is not a str - rm_ipaddr_from_list_of_floats()"""
 
     ip_addr_re = re.compile(r"^\(?\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\)?$")
-    numb_list = [float(elem) for elem in mylist if not ip_addr_re.match(elem)]
+    numb_list = [
+        float(rm_nondigits_fromstr(elem))
+        for elem in mylist
+        if not ip_addr_re.match(elem)
+    ]
 
     return numb_list
 
@@ -93,7 +106,7 @@ def get_high_latency_hop_data(
     """
     Detects which averaged timings are > LARGE_THRESHOLD.
     Returns:
-        large_latency_str: a list containing the treaceroute row
+        large_latency_str: a list containing the traceroute row
         large_latency_idx: a list containing traceroute indexes
     """
 
