@@ -1,8 +1,16 @@
-# NetUp
+# NetUp Demo - (A Timed Interview Test ~10 days)
 
 ## Overview
 
-A Python3 script to check network connectivity and suggest possible reasonsfor lost connectivity. Tested working on Ubuntu 20.04.
+A Python3 program to check network connectivity and suggest possible reasons for lost connectivity. Tested working on Ubuntu 20.04.
+
+Write a script using Python that:
+1. Determines the state of Internet connectivity.
+2. If a loss of connectivity is detected, determines the cause and reports it.
+3. For as many causes as possible, suggests a fix.
+4. Sets the script’s exit status to indicate whether or not Internet connectivity was present
+
+#### Note: This code has been written to showcase my Python3 dev skills, so yes, I went OTT! :)
 
 ## Dependencies
 
